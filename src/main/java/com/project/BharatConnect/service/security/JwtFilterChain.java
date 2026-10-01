@@ -1,0 +1,63 @@
+package com.project.BharatConnect.service.security;
+
+import com.project.BharatConnect.dto.security.JwtTokenDto;
+import com.project.BharatConnect.error.exception.JwtIllegalTokenException;
+import com.project.BharatConnect.service.user.AuthenticationUserDetailService;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.UUID;
+
+
+@Configuration
+@AllArgsConstructor
+public class JwtFilterChain extends OncePerRequestFilter {
+    private final JwtService jwtService;
+    private final AuthenticationUserDetailService userDetailsService;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String url = request.getContextPath();
+
+        if(url.startsWith("/api/authenication") || url.startsWith("/v3/") || url.startsWith("/swagger-ui")){
+            filterChain.doFilter(request , response);
+            return;
+        }
+
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String token = authHeader.substring(7);
+
+        JwtTokenDto jwtTokenDto = jwtService.extractClaim(token);
+        UUID userId;
+        try {
+            userId = UUID.fromString(jwtTokenDto.getUserId());
+        }catch (Exception e){
+            throw new JwtIllegalTokenException("UserId");
+        }
+
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetail = userDetailsService.loadUserWithToken(userId, jwtTokenDto);
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetail, null, userDetail.getAuthorities());
+            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(auth);
+        }
+        filterChain.doFilter(request, response);
+    }
+}

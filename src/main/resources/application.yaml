@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: BharatConnect
+
+  profiles:
+    active: database, security
+
+springdoc:
+  enable-default-api-docs: true
+
+server:
+  port: 8090
+
