@@ -3,7 +3,7 @@ spring:
     name: BharatConnect
 
   profiles:
-    active: database, security, mail, cloud
+    active: database, security, mail, cloud, ai
 springdoc:
   enable-default-api-docs: true
 
