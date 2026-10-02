@@ -32,4 +32,6 @@ public class ProfileController {
                 profileService.createFullProfile(requestDto)
         );
     }
+
+
 }
