@@ -65,7 +65,7 @@ public class MediaService {
 
         byte[] imageBytes = processPostImage(file);
 
-        Map<String, Object> params = ObjectUtils.asMap(
+        Map params = ObjectUtils.asMap(
                 "public_id", "posts/" + postId,
                 "overwrite", true,
                 "resource_type", "image"
@@ -89,7 +89,7 @@ public class MediaService {
 
         try {
 
-            Map<String, Object> params = ObjectUtils.asMap(
+            Map params = ObjectUtils.asMap(
                     "public_id", "videos/" + postId,
                     "overwrite", true,
                     "resource_type", "video"

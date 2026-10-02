@@ -9,14 +9,17 @@ import com.project.BharatConnect.error.exception.UsernameNotUniqueException;
 import com.project.BharatConnect.mapper.ProfileMapper;
 import com.project.BharatConnect.repo.ProfileRepository;
 import com.project.BharatConnect.repo.UserRepository;
+import com.project.BharatConnect.service.media.MediaService;
 import com.project.BharatConnect.service.user.UserDetail;
 import lombok.AllArgsConstructor;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -27,6 +30,7 @@ public class ProfileService {
     private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
     private final ProfileMapper profileMapper;
+    private final MediaService mediaService;
 
     @Transactional
     public Boolean createProfileWithUsername(String username){
@@ -63,7 +67,11 @@ public class ProfileService {
         assert userDetail != null;
         UUID userId = userDetail.getUser().getUserId();
 
-        Profile profile = profileRepository.getReferenceById(userId);
+        Profile profile = profileRepository
+                .findById(userId)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("Profile not found")
+                );
 
         profile.setDisplayName(requestDto.getDisplayName());
         profile.setBio(requestDto.getBio());
@@ -73,6 +81,35 @@ public class ProfileService {
         profileRepository.save(profile);
 
         return profileMapper.toResponse(profile);
+    }
+
+    @Transactional
+    public String uploadProfile(MultipartFile profileImage) {
+
+        UserDetail userDetail = (UserDetail) Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
+
+        assert userDetail != null;
+        UUID userId = userDetail.getUser().getUserId();
+
+        Profile profile = profileRepository
+                .findById(userId)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("Profile not found")
+                );
+
+        Map<String, Object> result =
+                mediaService.uploadProfileImage(
+                        profileImage,
+                        userId
+                );
+
+        String url = (String) result.get("secure_url");
+
+        profile.setProfileImage(url);
+
+        profileRepository.save(profile);
+
+        return url;
     }
 
 }
