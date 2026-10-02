@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -63,6 +64,12 @@ public class Profile {
 
     @Column(name = "last_updated_at")
     private LocalDateTime lastUpdatedAt;
+
+    @OneToMany(
+            mappedBy = "profile",
+            fetch = FetchType.LAZY
+    )
+    private List<Content> contents;
 
     @PrePersist
     protected void onCreate() {

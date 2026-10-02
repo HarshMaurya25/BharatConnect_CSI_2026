@@ -6,6 +6,7 @@ import com.project.BharatConnect.error.exception.InvalidRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -85,6 +86,17 @@ public class GlobalExceptionHandler {
                 exception.getMessage(),
                 "INVALID_REQUEST",
                 HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<List<ApiError>> handleAccessDeniedException(
+            AccessDeniedException exception
+    ) {
+        return errorBuilder.buildError(
+                exception.getMessage(),
+                "Access Denied",
+                HttpStatus.UNAUTHORIZED
         );
     }
 }

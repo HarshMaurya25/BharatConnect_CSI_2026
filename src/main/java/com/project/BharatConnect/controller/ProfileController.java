@@ -63,4 +63,5 @@ public class ProfileController {
                 profileService.getProfileByUsername(username)
         );
     }
+
 }

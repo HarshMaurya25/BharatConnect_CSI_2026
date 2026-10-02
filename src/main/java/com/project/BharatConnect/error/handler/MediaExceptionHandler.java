@@ -1,22 +1,24 @@
 package com.project.BharatConnect.error.handler;
 import com.project.BharatConnect.dto.exception.ApiError;
 import com.project.BharatConnect.error.ErrorBuilder;
+import com.project.BharatConnect.error.exception.ContentNotFoundException;
 import com.project.BharatConnect.error.exception.MediaProcessingException;
 import com.project.BharatConnect.error.exception.MediaTooLargeException;
 import com.project.BharatConnect.error.exception.InvalidMediaException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.util.List;
 
 @ControllerAdvice
-public class ImageExceptionHandler {
+public class MediaExceptionHandler {
 
     private final ErrorBuilder errorBuilder;
 
-    public ImageExceptionHandler(ErrorBuilder errorBuilder) {
+    public MediaExceptionHandler(ErrorBuilder errorBuilder) {
         this.errorBuilder = errorBuilder;
     }
 
@@ -50,6 +52,17 @@ public class ImageExceptionHandler {
                 exception.getMessage(),
                 "IMAGE_PROCESSING_FAILED",
                 HttpStatus.INTERNAL_SERVER_ERROR
+        );
+    }
+
+    @ExceptionHandler(ContentNotFoundException.class)
+    public ResponseEntity<List<ApiError>> handleContentNotFound(
+            ContentNotFoundException exception) {
+
+        return errorBuilder.buildError(
+                exception.getMessage(),
+                "Content Not Found",
+                HttpStatus.NOT_FOUND
         );
     }
 

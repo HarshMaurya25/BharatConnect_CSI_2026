@@ -13,6 +13,16 @@ import java.util.UUID;
                         name = "uk_follower_following",
                         columnNames = {"follower_id", "following_id"}
                 )
+        },
+        indexes = {
+                @Index(
+                        name = "idx_follow_follower",
+                        columnList = "follower_id"
+                ),
+                @Index(
+                        name = "idx_follow_following",
+                        columnList = "following_id"
+                )
         }
 )
 @Getter
