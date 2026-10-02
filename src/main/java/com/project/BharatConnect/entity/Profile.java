@@ -17,14 +17,12 @@ import java.util.UUID;
 public class Profile {
 
     @Id
+    @Column(name = "user_id")
     private UUID userId;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "user_id",
-            nullable = false,
-            unique = true
-    )
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @MapsId
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(nullable = false, length = 100, unique = true)

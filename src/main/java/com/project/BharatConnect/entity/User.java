@@ -31,6 +31,12 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @OneToOne(
+            mappedBy = "user",
+            fetch = FetchType.LAZY
+    )
+    private Profile profile;
+
     @Column(name = "date_of_creation", nullable = false)
     private LocalDateTime dateOfCreation;
 

@@ -12,6 +12,7 @@ import com.project.BharatConnect.repo.UserRepository;
 import com.project.BharatConnect.service.media.MediaService;
 import com.project.BharatConnect.service.user.UserDetail;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,6 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class ProfileService {
@@ -38,7 +40,7 @@ public class ProfileService {
 
         assert userDetail != null;
         UUID userId = userDetail.getUser().getUserId();
-
+        log.info("User id ; {}",userId.toString());
         User user = userRepository.getReferenceById(userId);
 
         if (profileRepository.existsById(userId)) {
@@ -46,22 +48,20 @@ public class ProfileService {
         }
 
         try {
-            Profile profile = Profile
-                    .builder()
-                    .userId(userId)
+            Profile profile = Profile.builder()
                     .user(user)
                     .userName(username)
                     .build();
 
-            profileRepository.save(profile);
-        }catch (DataIntegrityViolationException e){
+            profileRepository.saveAndFlush(profile);
+        } catch (DataIntegrityViolationException e) {
             throw new UsernameNotUniqueException(username);
         }
         return true;
     }
 
     @Transactional
-    public ProfileResponseDto createFullProfile(ProfileCreateRequestDto requestDto){
+    public ProfileResponseDto updateProfile(ProfileCreateRequestDto requestDto){
         UserDetail userDetail = (UserDetail) Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
 
         assert userDetail != null;

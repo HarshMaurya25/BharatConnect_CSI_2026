@@ -27,11 +27,11 @@ public class ProfileController {
     }
 
     @PutMapping
-    public ResponseEntity<ProfileResponseDto> createFullProfile(
+    public ResponseEntity<ProfileResponseDto> updateProfile(
             @RequestBody @Valid ProfileCreateRequestDto requestDto
     ) {
         return ResponseEntity.ok(
-                profileService.createFullProfile(requestDto)
+                profileService.updateProfile(requestDto)
         );
     }
 

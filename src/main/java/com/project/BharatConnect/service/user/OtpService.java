@@ -44,8 +44,6 @@ public class OtpService {
     }
 
     public boolean verifyOtp(String email, String otp) {
-        System.out.println(otpCache.toString());
-
         String storedOtp = otpCache.getIfPresent(email);
         if (storedOtp == null) {
             return false;
