@@ -27,7 +27,7 @@ public class Profile {
     )
     private User user;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 100, unique = true)
     private String userName;
 
     @Column(name = "display_name", length = 70)
