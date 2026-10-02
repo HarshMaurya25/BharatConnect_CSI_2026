@@ -26,7 +26,7 @@ public class ProfileExceptionHandler {
     ) {
         return errorBuilder.buildError(
                 exception.getMessage(),
-                "Authentication Failed",
+                "Already present",
                 HttpStatus.BAD_REQUEST
         );
     }

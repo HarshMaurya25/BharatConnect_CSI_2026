@@ -2,6 +2,7 @@ package com.project.BharatConnect.error.handler;
 
 import com.project.BharatConnect.dto.exception.ApiError;
 import com.project.BharatConnect.error.ErrorBuilder;
+import com.project.BharatConnect.error.exception.InvalidRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -74,6 +75,16 @@ public class GlobalExceptionHandler {
                 "The requested endpoint was not found",
                 "Endpoint Not Found",
                 HttpStatus.NOT_FOUND
+        );
+    }
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<List<ApiError>> handleInvalidRequest(
+            InvalidRequestException exception
+    ) {
+        return errorBuilder.buildError(
+                exception.getMessage(),
+                "INVALID_REQUEST",
+                HttpStatus.BAD_REQUEST
         );
     }
 }

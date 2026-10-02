@@ -1,7 +1,35 @@
 services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: postgres-db
+
+    environment:
+      POSTGRES_DB: bharatconnect
+      POSTGRES_USER: bharatconnect
+      POSTGRES_PASSWORD: bharatconnect
+
+    ports:
+      - "5455:5432"
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+    restart: unless-stopped
+
+  adminer:
+    image: adminer
+    container_name: adminer
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      - postgres
+
+    restart: unless-stopped
 
   app:
-    image: magician05/bharatcollab:latest
+    image: magician05/bharatcollab:v1
     container_name: bharatcollab
 
     ports:
@@ -10,7 +38,7 @@ services:
     environment:
       SECRET_CODE: ${SECRET_CODE}
 
-      DB_URL: ${DB_URL}
+      DB_URL: jdbc:postgresql://postgres:5432/bharatconnect
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
 
@@ -22,7 +50,10 @@ services:
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
 
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
 
     restart: unless-stopped
+
+
+volumes:
+  postgres-data:

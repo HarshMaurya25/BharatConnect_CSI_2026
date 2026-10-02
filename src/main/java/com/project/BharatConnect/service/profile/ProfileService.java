@@ -4,6 +4,7 @@ import com.project.BharatConnect.dto.profile.ProfileCreateRequestDto;
 import com.project.BharatConnect.dto.profile.ProfileResponseDto;
 import com.project.BharatConnect.entity.Profile;
 import com.project.BharatConnect.entity.User;
+import com.project.BharatConnect.error.exception.InvalidRequestException;
 import com.project.BharatConnect.error.exception.UserAlreadyExistException;
 import com.project.BharatConnect.error.exception.UsernameNotUniqueException;
 import com.project.BharatConnect.mapper.ProfileMapper;
@@ -11,7 +12,6 @@ import com.project.BharatConnect.repo.ProfileRepository;
 import com.project.BharatConnect.repo.UserRepository;
 import com.project.BharatConnect.service.media.MediaService;
 import com.project.BharatConnect.service.user.UserDetail;
-import jakarta.validation.ValidationException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -39,11 +39,11 @@ public class ProfileService {
     public Boolean createProfileWithUsername(String username){
 
         if (username == null || username.isBlank()) {
-            throw new ValidationException("Username cannot be empty");
+            throw new InvalidRequestException("Username cannot be empty");
         }
 
         if (!username.matches("^[a-zA-Z0-9_$]+$")) {
-            throw new ValidationException(
+            throw new InvalidRequestException(
                     "Username can contain only letters, numbers, _ and $"
             );
         }

@@ -38,7 +38,7 @@ public class OtpService {
                 .OTP(otp)
                 .build();
 
-//        eventPublisher.publishEvent(otpCodeDto);
+        eventPublisher.publishEvent(otpCodeDto);
 
         return otp;
     }
