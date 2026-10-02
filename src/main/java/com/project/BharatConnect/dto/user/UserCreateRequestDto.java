@@ -1,10 +1,7 @@
 package com.project.BharatConnect.dto.user;
 
 import com.project.BharatConnect.util.Role;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,5 +24,12 @@ public class UserCreateRequestDto {
 
     @NotNull(message = "Role is required")
     private Role role;
+
+    @NotNull(message = "Role is required")
+    @Pattern(
+            regexp = "\\d{6}",
+            message = "OTP must be exactly 6 digits"
+    )
+    private String otp;
 }
 
