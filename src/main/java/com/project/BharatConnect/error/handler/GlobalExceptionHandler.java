@@ -2,10 +2,12 @@ package com.project.BharatConnect.error.handler;
 
 import com.project.BharatConnect.dto.exception.ApiError;
 import com.project.BharatConnect.error.ErrorBuilder;
-import com.project.BharatConnect.error.exception.InvalidRequestException;
+import com.project.BharatConnect.error.exception.*;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -24,7 +26,6 @@ public class GlobalExceptionHandler {
     public GlobalExceptionHandler(ErrorBuilder errorBuilder) {
         this.errorBuilder = errorBuilder;
     }
-
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<List<ApiError>> handleMethodArgumentNotValid(MethodArgumentNotValidException exception) {
@@ -78,6 +79,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND
         );
     }
+
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<List<ApiError>> handleInvalidRequest(
             InvalidRequestException exception
@@ -96,7 +98,62 @@ public class GlobalExceptionHandler {
         return errorBuilder.buildError(
                 exception.getMessage(),
                 "Access Denied",
-                HttpStatus.UNAUTHORIZED
+                HttpStatus.FORBIDDEN
+        );
+    }
+
+    @ExceptionHandler(CommentNotFoundException.class)
+    public ResponseEntity<List<ApiError>> handleCommentNotFound(
+            CommentNotFoundException exception
+    ) {
+        return errorBuilder.buildError(
+                exception.getMessage(),
+                "Comment Not Found",
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    @ExceptionHandler({ConflictException.class, ReplyLimitReachedException.class})
+    public ResponseEntity<List<ApiError>> handleConflict(
+            RuntimeException exception
+    ) {
+        return errorBuilder.buildError(
+                exception.getMessage(),
+                "CONFLICT",
+                HttpStatus.CONFLICT
+        );
+    }
+
+    @ExceptionHandler(NestingLimitExceededException.class)
+    public ResponseEntity<List<ApiError>> handleNestingLimitExceeded(
+            NestingLimitExceededException exception
+    ) {
+        return errorBuilder.buildError(
+                exception.getMessage(),
+                "UNPROCESSABLE_ENTITY",
+                HttpStatus.UNPROCESSABLE_ENTITY
+        );
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<List<ApiError>> handleDataIntegrityViolation(
+            DataIntegrityViolationException exception
+    ) {
+        return errorBuilder.buildError(
+                "Database constraint violation occurred",
+                "DATA_INTEGRITY_VIOLATION",
+                HttpStatus.CONFLICT
+        );
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<List<ApiError>> handleOptimisticLockingFailure(
+            ObjectOptimisticLockingFailureException exception
+    ) {
+        return errorBuilder.buildError(
+                "Resource was modified concurrently. Please try again.",
+                "CONCURRENT_MODIFICATION",
+                HttpStatus.CONFLICT
         );
     }
 }
