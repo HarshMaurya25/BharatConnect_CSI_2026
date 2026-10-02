@@ -29,11 +29,11 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
     );
 
     @Query("""
-        SELECT new com.project.BharatConnect.dto.follow.FollowUserResponseDto(
-            p.userId,
-            p.userName,
-            p.displayName
-        )
+SELECT new com.project.BharatConnect.dto.social.FollowUserResponseDto(
+                    p.userId,
+                    p.userName,
+                    p.displayName
+                )
         FROM Follow f
         JOIN Profile p ON p.userId = f.followerId
         WHERE f.followingId = :userId
@@ -44,7 +44,7 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
     );
 
     @Query("""
-        SELECT new com.project.BharatConnect.dto.follow.FollowUserResponseDto(
+SELECT new com.project.BharatConnect.dto.social.FollowUserResponseDto(
             p.userId,
             p.userName,
             p.displayName
