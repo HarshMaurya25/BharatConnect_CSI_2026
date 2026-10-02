@@ -13,10 +13,12 @@ import com.project.BharatConnect.service.security.JwtService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.Null;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class UserService {
@@ -27,11 +29,6 @@ public class UserService {
     private final OtpService otpService;
 
     public String sendOtp(String email) {
-
-        if (userRepository.existsByEmail(email)) {
-            throw new UserAlreadyExistException(email);
-        }
-
         return otpService.generateOtp(email);
     }
 

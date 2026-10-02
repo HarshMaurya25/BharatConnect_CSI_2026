@@ -5,9 +5,11 @@ import com.project.BharatConnect.error.ErrorBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,6 +47,33 @@ public class GlobalExceptionHandler {
                 "Invalid request body. Please check the provided values.",
                 "Invalid JSON",
                 HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<List<ApiError>> handleMethodNotSupported(
+            HttpRequestMethodNotSupportedException exception) {
+
+        String message = String.format(
+                "HTTP method '%s' is not supported for this endpoint",
+                exception.getMethod()
+        );
+
+        return errorBuilder.buildError(
+                message,
+                "Method Not Allowed",
+                HttpStatus.METHOD_NOT_ALLOWED
+        );
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<List<ApiError>> handleNoResourceFound(
+            NoResourceFoundException exception) {
+
+        return errorBuilder.buildError(
+                "The requested endpoint was not found",
+                "Endpoint Not Found",
+                HttpStatus.NOT_FOUND
         );
     }
 }

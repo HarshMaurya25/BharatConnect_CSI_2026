@@ -75,7 +75,7 @@ public class AuthenticationExceptionHandler {
         return errorBuilder.buildError(
                 exception.getMessage(),
                 "User Not Found",
-                HttpStatus.UNAUTHORIZED
+                HttpStatus.NOT_FOUND
         );
     }
 
@@ -108,7 +108,18 @@ public class AuthenticationExceptionHandler {
         return errorBuilder.buildError(
                 exception.getMessage(),
                 "OTP Expire",
-                HttpStatus.CONFLICT
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    @ExceptionHandler(OtpWrongException.class)
+    public ResponseEntity<List<ApiError>> handleWrongOtp(
+            OtpWrongException exception) {
+
+        return errorBuilder.buildError(
+                exception.getMessage(),
+                "Wrong Otp",
+                HttpStatus.BAD_REQUEST
         );
     }
 

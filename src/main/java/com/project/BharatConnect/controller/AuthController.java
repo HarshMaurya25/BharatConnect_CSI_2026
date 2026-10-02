@@ -28,7 +28,7 @@ public class AuthController {
             @RequestParam String email
     ) {
 
-        String otp = userService.sendOtp(email);
+        userService.sendOtp(email);
 
         return ResponseEntity.ok("OTP sent successfully");
     }
