@@ -1,7 +1,7 @@
 package com.project.BharatConnect.repo;
 
+import com.project.BharatConnect.dto.social.LikerDto;
 import com.project.BharatConnect.entity.ContentLike;
-import com.project.BharatConnect.entity.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,10 +27,13 @@ public interface ContentLikeRepository extends JpaRepository<ContentLike, UUID> 
     List<UUID> findLikedContentIdsByProfile(@Param("profileId") UUID profileId, @Param("contentIds") Collection<UUID> contentIds);
 
     @Query(
-            value = "SELECT l.profile FROM ContentLike l WHERE l.content.id = :contentId ORDER BY l.createdAt DESC",
+            value = "SELECT new com.project.BharatConnect.dto.social.LikerDto(p.userId, p.userName, p.displayName) " +
+                    "FROM ContentLike l JOIN l.profile p " +
+                    "WHERE l.content.id = :contentId " +
+                    "ORDER BY l.createdAt DESC, l.id DESC",
             countQuery = "SELECT COUNT(l) FROM ContentLike l WHERE l.content.id = :contentId"
     )
-    Page<Profile> findLikersByContentId(@Param("contentId") UUID contentId, Pageable pageable);
+    Page<LikerDto> findLikersByContentId(@Param("contentId") UUID contentId, Pageable pageable);
 
     @Modifying
     @Query("DELETE FROM ContentLike l WHERE l.content.id = :contentId")

@@ -24,4 +24,21 @@ public class ContentCreateRequest {
     private Integer pollDurationHours;
 
     private UUID parentContentId;
+
+    // Quiz fields
+    private List<QuizOptionCreateRequest> quizOptions;
+
+    private String quizExplanation;
+
+    private Integer quizDurationHours;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class QuizOptionCreateRequest {
+        private String text;
+        private Boolean correct;
+    }
 }

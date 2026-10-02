@@ -1,12 +1,14 @@
 package com.project.BharatConnect.service.content;
 
 import com.project.BharatConnect.dto.content.ContentCreateRequest;
+import com.project.BharatConnect.dto.content.ContentResponseDto;
 import com.project.BharatConnect.entity.Content;
 import com.project.BharatConnect.entity.ContentType;
 import com.project.BharatConnect.entity.Poll;
 import com.project.BharatConnect.entity.PollOption;
 import com.project.BharatConnect.entity.PollVote;
 import com.project.BharatConnect.entity.Profile;
+import com.project.BharatConnect.error.exception.ConflictException;
 import com.project.BharatConnect.error.exception.ContentNotFoundException;
 import com.project.BharatConnect.error.exception.InvalidRequestException;
 import com.project.BharatConnect.repo.PollOptionRepository;
@@ -16,7 +18,6 @@ import com.project.BharatConnect.repo.ProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -123,20 +124,24 @@ class PollServiceTest {
                 .voteCount(5L)
                 .build();
 
-        when(pollRepository.findById(pollId)).thenReturn(Optional.of(poll));
-        when(pollOptionRepository.findById(optionId1)).thenReturn(Optional.of(option));
+        poll.setOptions(List.of(option));
+
+        when(pollRepository.findByIdWithOptions(pollId)).thenReturn(Optional.of(poll));
         when(pollVoteRepository.existsByPollIdAndProfileUserId(pollId, profileId)).thenReturn(false);
         when(profileRepository.getReferenceById(profileId)).thenReturn(profile);
 
-        pollService.vote(pollId, optionId1, profileId);
+        ContentResponseDto.PollDto result = pollService.vote(pollId, optionId1, profileId);
 
-        verify(pollVoteRepository, times(1)).save(any(PollVote.class));
+        assertNotNull(result);
+        assertEquals(pollId, result.pollId());
+        assertEquals(optionId1, result.votedOptionId());
+        verify(pollVoteRepository, times(1)).saveAndFlush(any(PollVote.class));
         verify(pollOptionRepository, times(1)).incrementVoteCount(optionId1);
     }
 
     @Test
     void testVote_PollNotFound_ThrowsContentNotFoundException() {
-        when(pollRepository.findById(pollId)).thenReturn(Optional.empty());
+        when(pollRepository.findByIdWithOptions(pollId)).thenReturn(Optional.empty());
 
         assertThrows(ContentNotFoundException.class, () ->
                 pollService.vote(pollId, optionId1, profileId)
@@ -146,16 +151,16 @@ class PollServiceTest {
     }
 
     @Test
-    void testVote_PollExpired_ThrowsInvalidRequestException() {
+    void testVote_PollExpired_ThrowsConflictException() {
         Poll expiredPoll = Poll.builder()
                 .id(pollId)
                 .content(content)
                 .expiresAt(LocalDateTime.now().minusMinutes(5))
                 .build();
 
-        when(pollRepository.findById(pollId)).thenReturn(Optional.of(expiredPoll));
+        when(pollRepository.findByIdWithOptions(pollId)).thenReturn(Optional.of(expiredPoll));
 
-        InvalidRequestException ex = assertThrows(InvalidRequestException.class, () ->
+        ConflictException ex = assertThrows(ConflictException.class, () ->
                 pollService.vote(pollId, optionId1, profileId)
         );
 
@@ -181,11 +186,12 @@ class PollServiceTest {
                 .optionText("Other Option")
                 .build();
 
-        when(pollRepository.findById(pollId)).thenReturn(Optional.of(poll));
-        when(pollOptionRepository.findById(optionId2)).thenReturn(Optional.of(optionOfOtherPoll));
+        poll.setOptions(List.of(optionOfOtherPoll));
+
+        when(pollRepository.findByIdWithOptions(pollId)).thenReturn(Optional.of(poll));
 
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, () ->
-                pollService.vote(pollId, optionId2, profileId)
+                pollService.vote(pollId, optionId1, profileId)
         );
 
         assertEquals("Invalid option", ex.getMessage());
@@ -194,7 +200,7 @@ class PollServiceTest {
     }
 
     @Test
-    void testVote_DoubleVote_ThrowsInvalidRequestException() {
+    void testVote_DoubleVote_ThrowsConflictException() {
         Poll poll = Poll.builder()
                 .id(pollId)
                 .content(content)
@@ -207,11 +213,12 @@ class PollServiceTest {
                 .optionText("Option 1")
                 .build();
 
-        when(pollRepository.findById(pollId)).thenReturn(Optional.of(poll));
-        when(pollOptionRepository.findById(optionId1)).thenReturn(Optional.of(option));
+        poll.setOptions(List.of(option));
+
+        when(pollRepository.findByIdWithOptions(pollId)).thenReturn(Optional.of(poll));
         when(pollVoteRepository.existsByPollIdAndProfileUserId(pollId, profileId)).thenReturn(true);
 
-        InvalidRequestException ex = assertThrows(InvalidRequestException.class, () ->
+        ConflictException ex = assertThrows(ConflictException.class, () ->
                 pollService.vote(pollId, optionId1, profileId)
         );
 

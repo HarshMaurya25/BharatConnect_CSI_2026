@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BharatConnect API Dev Test Page</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --code-bg: #0f172a;
+      --code-text: #f8fafc;
+      --input-bg: #ffffff;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b0f19;
+        --card-bg: #1e293b;
+        --text: #f1f5f9;
+        --text-muted: #94a3b8;
+        --border: #334155;
+        --primary: #3b82f6;
+        --primary-hover: #60a5fa;
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --code-bg: #020617;
+        --code-text: #e2e8f0;
+        --input-bg: #0f172a;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    @media (max-width: 650px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 0.75rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.825rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: var(--text);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background-color: var(--input-bg);
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid var(--primary);
+      outline-offset: -1px;
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: normal;
+      cursor: pointer;
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+    }
+
+    .checkbox-label input {
+      width: auto;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 0.55rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: var(--primary-hover);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    button.btn-secondary {
+      background-color: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    button.btn-secondary:hover:not(:disabled) {
+      background-color: var(--border);
+    }
+
+    button.btn-danger {
+      background-color: var(--danger);
+      color: #ffffff;
+    }
+
+    button.btn-sm {
+      padding: 0.3rem 0.6rem;
+      font-size: 0.75rem;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .status-2xx { background-color: var(--success); color: #fff; }
+    .status-4xx { background-color: var(--warning); color: #fff; }
+    .status-5xx { background-color: var(--danger); color: #fff; }
+    .status-err { background-color: var(--danger); color: #fff; }
+
+    .preview-container {
+      margin-top: 0.5rem;
+      max-width: 100%;
+    }
+
+    .preview-container img, .preview-container video {
+      max-width: 100%;
+      max-height: 240px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      display: block;
+    }
+
+    .option-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .option-row input[type="text"] {
+      flex: 1;
+    }
+
+    .option-row label {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin-bottom: 0;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    pre#responseBody {
+      background-color: var(--code-bg);
+      color: var(--code-text);
+      padding: 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      max-height: 350px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .interactive-card {
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: var(--input-bg);
+    }
+
+    .interactive-card h3 {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .interactive-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin: 0.75rem 0;
+    }
+
+    .interactive-opt-btn {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+    }
+
+    .interactive-opt-btn:hover {
+      border-color: var(--primary);
+    }
+
+    .interactive-opt-btn.correct-choice {
+      border-color: var(--success);
+      background-color: rgba(34, 197, 94, 0.1);
+    }
+
+    .interactive-opt-btn.wrong-choice {
+      border-color: var(--danger);
+      background-color: rgba(239, 68, 68, 0.1);
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-top: 0.75rem;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.6rem;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+
+    .history-item-left {
+      cursor: pointer;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .history-item-left:hover {
+      color: var(--primary);
+    }
+
+    .history-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    details {
+      margin-top: 0.5rem;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .accordion-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    .tool-box {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.75rem;
+      background: var(--input-bg);
+    }
+
+    .tool-box h4 {
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+      font-size: 0.825rem;
+    }
+
+    table.data-table th, table.data-table td {
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.6rem;
+      text-align: left;
+    }
+
+    table.data-table th {
+      background: var(--card-bg);
+      font-weight: 600;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <h1>BharatConnect Dev Test Page</h1>
+    <p>Manual testing tool for Content, Polls, Quizzes, Reposts, Likes, and Comments</p>
+  </header>
+
+  <!-- 1. SETTINGS & AUTH BAR -->
+  <section class="card" id="settingsCard">
+    <div class="card-title">
+      <span>1. Connection & Authentication</span>
+      <span id="authStatusBadge" class="status-badge" style="background:#64748b;color:#fff;">Not logged in</span>
+    </div>
+
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="baseUrlInput">Base URL</label>
+        <input type="text" id="baseUrlInput" placeholder="http://localhost:8090">
+      </div>
+      <div class="form-group">
+        <label for="tokenInput">Manual JWT Token</label>
+        <input type="text" id="tokenInput" placeholder="Bearer eyJhbGciOi...">
+      </div>
+    </div>
+
+    <div class="grid-2" id="loginFields">
+      <div class="form-group">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="user@example.com">
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" id="loginBtn">Login</button>
+      <button type="button" class="btn-secondary" id="saveTokenBtn">Save Manual Token</button>
+      <button type="button" class="btn-secondary hidden" id="logoutBtn">Logout</button>
+      <span id="userInfoText" style="font-size: 0.85rem; color: var(--text-muted);"></span>
+    </div>
+  </section>
+
+  <!-- 2. CREATE CONTENT FORM -->
+  <section class="card">
+    <div class="card-title">
+      <span>2. Create Content</span>
+      <label class="checkbox-label">
+        <input type="checkbox" id="skipValidationCheck">
+        Skip client validation (test server 4xx)
+      </label>
+    </div>
+
+    <form id="contentForm">
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="contentTypeSelect">Content Type *</label>
+          <select id="contentTypeSelect">
+            <option value="TEXT">TEXT</option>
+            <option value="IMAGE">IMAGE</option>
+            <option value="VIDEO">VIDEO</option>
+            <option value="POLL">POLL</option>
+            <option value="QUIZ">QUIZ</option>
+            <option value="REPOST">REPOST</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="contentNameInput">Content Title / Name (optional)</label>
+          <input type="text" id="contentNameInput" placeholder="e.g. My Summer Trip / Weekly Trivia">
+        </div>
+      </div>
+
+      <!-- TEXT / CAPTION / QUESTION -->
+      <div class="form-group">
+        <label for="contentText" id="textLabel">Text / Caption / Question</label>
+        <textarea id="contentText" placeholder="Write something..."></textarea>
+      </div>
+
+      <!-- IMAGE FILE INPUT -->
+      <div class="form-group hidden" id="imageGroup">
+        <label for="imageFile">Select Image *</label>
+        <input type="file" id="imageFile" accept="image/*">
+        <div class="preview-container hidden" id="imagePreviewBox">
+          <img id="imagePreview" alt="Preview">
+        </div>
+      </div>
+
+      <!-- VIDEO FILE INPUT -->
+      <div class="form-group hidden" id="videoGroup">
+        <label for="videoFile">Select Video *</label>
+        <input type="file" id="videoFile" accept="video/*">
+        <div class="preview-container hidden" id="videoPreviewBox">
+          <video id="videoPreview" controls></video>
+        </div>
+      </div>
+
+      <!-- POLL OPTIONS -->
+      <div class="form-group hidden" id="pollGroup">
+        <label>Poll Options (2 to 6 options)</label>
+        <div id="pollOptionsContainer">
+          <div class="option-row">
+            <input type="text" class="poll-option-input" placeholder="Option 1">
+          </div>
+          <div class="option-row">
+            <input type="text" class="poll-option-input" placeholder="Option 2">
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:0.4rem;">
+          <button type="button" class="btn-secondary" id="addPollOptionBtn">+ Add Option</button>
+          <button type="button" class="btn-secondary" id="removePollOptionBtn">- Remove Option</button>
+        </div>
+        <div class="form-group" style="margin-top:0.75rem;">
+          <label for="pollDuration">Poll Duration (Hours, optional)</label>
+          <input type="number" id="pollDuration" placeholder="e.g. 24" min="1">
+        </div>
+      </div>
+
+      <!-- QUIZ OPTIONS -->
+      <div class="form-group hidden" id="quizGroup">
+        <label>Quiz Options (2 to 6 options, select exactly one correct answer)</label>
+        <div id="quizOptionsContainer">
+          <div class="option-row">
+            <input type="text" class="quiz-option-input" placeholder="Option 1">
+            <label><input type="radio" name="quizCorrect" value="0" checked> Correct</label>
+          </div>
+          <div class="option-row">
+            <input type="text" class="quiz-option-input" placeholder="Option 2">
+            <label><input type="radio" name="quizCorrect" value="1"> Correct</label>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:0.4rem;">
+          <button type="button" class="btn-secondary" id="addQuizOptionBtn">+ Add Option</button>
+          <button type="button" class="btn-secondary" id="removeQuizOptionBtn">- Remove Option</button>
+        </div>
+        <div class="form-group" style="margin-top:0.75rem;">
+          <label for="quizExplanation">Explanation (shown after answering / expiry, optional, max 500 chars)</label>
+          <textarea id="quizExplanation" placeholder="Why is this answer correct?"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="quizDuration">Quiz Duration (Hours, optional)</label>
+          <input type="number" id="quizDuration" placeholder="e.g. 48" min="1">
+        </div>
+      </div>
+
+      <!-- REPOST PARENT ID -->
+      <div class="form-group hidden" id="repostGroup">
+        <label for="parentContentId">Parent Content ID (UUID) *</label>
+        <input type="text" id="parentContentId" placeholder="123e4567-e89b-12d3-a456-426614174000">
+        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">
+          Leave text blank for a plain repost, or fill text above for a quote post (max 500 chars).
+        </p>
+      </div>
+
+      <div class="btn-row">
+        <button type="submit" id="submitContentBtn">Upload Content</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- 3. RESPONSE PANEL -->
+  <section class="card">
+    <div class="card-title">
+      <span>3. Response Inspector</span>
+      <div>
+        <span id="responseStatus" class="status-badge hidden"></span>
+        <span id="responseTime" style="font-size:0.8rem; color:var(--text-muted); margin-left:0.5rem;"></span>
+      </div>
+    </div>
+
+    <!-- Interactive Card for Poll / Quiz -->
+    <div id="interactiveCard" class="interactive-card hidden"></div>
+
+    <pre id="responseBody">// Results will appear here after making a request</pre>
+
+    <details id="historyDetails">
+      <summary>Request History (Last 10)</summary>
+      <div class="history-list" id="historyList"></div>
+    </details>
+  </section>
+
+  <!-- 4. EXTRA TEST TOOLS -->
+  <section class="card">
+    <div class="card-title">
+      <span>4. Additional API Test Tools</span>
+    </div>
+
+    <div class="accordion-grid">
+      <!-- CONTENT GET & DELETE -->
+      <div class="tool-box">
+        <h4>Content Inspection & Feed</h4>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Get Content by ID</label>
+            <div class="btn-row">
+              <input type="text" id="getContentId" placeholder="Content UUID">
+              <button type="button" id="getContentBtn">Get</button>
+              <button type="button" class="btn-danger" id="deleteContentBtn">Delete</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Get User Content Feed</label>
+            <div class="btn-row">
+              <input type="text" id="feedUserId" placeholder="User UUID">
+              <button type="button" id="getFeedBtn">Fetch Feed</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- POLL & QUIZ ACTIONS -->
+      <div class="tool-box">
+        <h4>Poll & Quiz Actions</h4>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Vote on Poll (by Content ID)</label>
+            <input type="text" id="voteContentId" placeholder="Content UUID" style="margin-bottom:0.4rem;">
+            <div class="btn-row">
+              <input type="text" id="voteOptionId" placeholder="Option UUID">
+              <button type="button" id="voteBtn">Vote</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Answer Quiz (by Content ID)</label>
+            <input type="text" id="quizContentId" placeholder="Content UUID" style="margin-bottom:0.4rem;">
+            <div class="btn-row">
+              <input type="text" id="quizAnswerOptionId" placeholder="Option UUID">
+              <button type="button" id="quizAnswerBtn">Submit Answer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIKES & LIKERS TABLE -->
+      <div class="tool-box">
+        <h4>Likes & Likers Projection</h4>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Content Like / Unlike / Likers</label>
+            <div class="btn-row" style="margin-bottom:0.4rem;">
+              <input type="text" id="likeContentId" placeholder="Content UUID">
+              <button type="button" id="likeContentBtn">Like</button>
+              <button type="button" class="btn-secondary" id="unlikeContentBtn">Unlike</button>
+            </div>
+            <div class="btn-row">
+              <input type="number" id="contentLikersPage" placeholder="Page (0)" min="0" style="width:70px;">
+              <button type="button" class="btn-secondary" id="getLikersBtn">Fetch Likers</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Comment Like / Unlike / Likers</label>
+            <div class="btn-row" style="margin-bottom:0.4rem;">
+              <input type="text" id="likeCommentId" placeholder="Comment UUID">
+              <button type="button" id="likeCommentBtn">Like</button>
+              <button type="button" class="btn-secondary" id="unlikeCommentBtn">Unlike</button>
+            </div>
+            <div class="btn-row">
+              <input type="number" id="commentLikersPage" placeholder="Page (0)" min="0" style="width:70px;">
+              <button type="button" class="btn-secondary" id="getCommentLikersBtn">Fetch Likers</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table Display for Likers -->
+        <div id="likersTableBox" class="hidden" style="margin-top:0.75rem;">
+          <h5 id="likersTableTitle" style="font-size:0.85rem; margin-bottom:0.3rem;">Likers</h5>
+          <table class="data-table" id="likersTable">
+            <thead>
+              <tr>
+                <th>ID (UUID)</th>
+                <th>Username</th>
+                <th>Display Name</th>
+              </tr>
+            </thead>
+            <tbody id="likersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- COMMENTS -->
+      <div class="tool-box">
+        <h4>Comments & Replies</h4>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Post Comment / Reply</label>
+            <input type="text" id="commentContentId" placeholder="Content UUID" style="margin-bottom:0.4rem;">
+            <input type="text" id="commentParentId" placeholder="Parent Comment UUID (optional for reply)" style="margin-bottom:0.4rem;">
+            <div class="btn-row">
+              <input type="text" id="commentText" placeholder="Comment text">
+              <button type="button" id="postCommentBtn">Post Comment</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Fetch Comments / Replies</label>
+            <div class="btn-row" style="margin-bottom:0.4rem;">
+              <input type="text" id="fetchCommentsContentId" placeholder="Content UUID">
+              <button type="button" id="getCommentsBtn">Get Comments</button>
+            </div>
+            <div class="btn-row">
+              <input type="text" id="fetchRepliesCommentId" placeholder="Comment UUID">
+              <button type="button" id="getRepliesBtn">Get Replies</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:0.75rem;">
+          <div class="form-group">
+            <label>Edit Comment (Author Only - PATCH)</label>
+            <input type="text" id="editCommentId" placeholder="Comment UUID" style="margin-bottom:0.4rem;">
+            <div class="btn-row">
+              <input type="text" id="editCommentText" placeholder="New text">
+              <button type="button" id="editCommentBtn">Edit</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Delete Comment (Author / Owner / Admin - DELETE)</label>
+            <div class="btn-row">
+              <input type="text" id="deleteCommentId" placeholder="Comment UUID">
+              <button type="button" class="btn-danger" id="deleteCommentBtn">Delete Comment</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // ==========================================
+  // CONFIG & STATE MANAGEMENT
+  // ==========================================
+  const defaultBaseUrl = window.location.origin && window.location.origin.startsWith('http')
+    ? window.location.origin
+    : 'http://localhost:8090';
+
+  let baseUrl = localStorage.getItem('bc_base_url') || defaultBaseUrl;
+  let authToken = localStorage.getItem('bc_jwt_token') || '';
+  let authUser = JSON.parse(localStorage.getItem('bc_auth_user') || 'null');
+  let requestHistory = [];
+
+  // DOM Elements
+  const baseUrlInput = document.getElementById('baseUrlInput');
+  const tokenInput = document.getElementById('tokenInput');
+  const authStatusBadge = document.getElementById('authStatusBadge');
+  const userInfoText = document.getElementById('userInfoText');
+  const loginFields = document.getElementById('loginFields');
+  const loginBtn = document.getElementById('loginBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const saveTokenBtn = document.getElementById('saveTokenBtn');
+
+  const contentTypeSelect = document.getElementById('contentTypeSelect');
+  const textLabel = document.getElementById('textLabel');
+  const contentText = document.getElementById('contentText');
+  const contentNameInput = document.getElementById('contentNameInput');
+  const imageGroup = document.getElementById('imageGroup');
+  const imageFile = document.getElementById('imageFile');
+  const imagePreview = document.getElementById('imagePreview');
+  const imagePreviewBox = document.getElementById('imagePreviewBox');
+  const videoGroup = document.getElementById('videoGroup');
+  const videoFile = document.getElementById('videoFile');
+  const videoPreview = document.getElementById('videoPreview');
+  const videoPreviewBox = document.getElementById('videoPreviewBox');
+  
+  const pollGroup = document.getElementById('pollGroup');
+  const pollOptionsContainer = document.getElementById('pollOptionsContainer');
+  const pollDuration = document.getElementById('pollDuration');
+  const addPollOptionBtn = document.getElementById('addPollOptionBtn');
+  const removePollOptionBtn = document.getElementById('removePollOptionBtn');
+
+  const quizGroup = document.getElementById('quizGroup');
+  const quizOptionsContainer = document.getElementById('quizOptionsContainer');
+  const quizExplanation = document.getElementById('quizExplanation');
+  const quizDuration = document.getElementById('quizDuration');
+  const addQuizOptionBtn = document.getElementById('addQuizOptionBtn');
+  const removeQuizOptionBtn = document.getElementById('removeQuizOptionBtn');
+
+  const repostGroup = document.getElementById('repostGroup');
+  const parentContentId = document.getElementById('parentContentId');
+  const skipValidationCheck = document.getElementById('skipValidationCheck');
+  const submitContentBtn = document.getElementById('submitContentBtn');
+
+  const responseStatus = document.getElementById('responseStatus');
+  const responseTime = document.getElementById('responseTime');
+  const responseBody = document.getElementById('responseBody');
+  const interactiveCard = document.getElementById('interactiveCard');
+  const historyList = document.getElementById('historyList');
+
+  // ==========================================
+  // INITIALIZATION
+  // ==========================================
+  baseUrlInput.value = baseUrl;
+  tokenInput.value = authToken;
+  updateAuthUI();
+
+  baseUrlInput.addEventListener('change', () => {
+    baseUrl = baseUrlInput.value.trim().replace(/\/+$/, '');
+    localStorage.setItem('bc_base_url', baseUrl);
+  });
+
+  tokenInput.addEventListener('change', () => {
+    setAuthToken(tokenInput.value.trim());
+  });
+
+  saveTokenBtn.addEventListener('click', () => {
+    setAuthToken(tokenInput.value.trim());
+  });
+
+  function setAuthToken(token) {
+    if (token && !token.startsWith('Bearer ')) {
+      token = 'Bearer ' + token;
+    }
+    authToken = token;
+    if (token) {
+      localStorage.setItem('bc_jwt_token', token);
+    } else {
+      localStorage.removeItem('bc_jwt_token');
+    }
+    updateAuthUI();
+  }
+
+  function updateAuthUI() {
+    if (authToken) {
+      authStatusBadge.textContent = 'Authenticated';
+      authStatusBadge.className = 'status-badge status-2xx';
+      logoutBtn.classList.remove('hidden');
+      if (authUser && authUser.email) {
+        userInfoText.textContent = `Logged in as: ${authUser.email} (ID: ${authUser.userId || 'N/A'})`;
+      } else {
+        userInfoText.textContent = 'Using custom JWT Bearer token';
+      }
+    } else {
+      authStatusBadge.textContent = 'Not logged in';
+      authStatusBadge.className = 'status-badge';
+      authStatusBadge.style.backgroundColor = '#64748b';
+      logoutBtn.classList.add('hidden');
+      userInfoText.textContent = '';
+    }
+  }
+
+  // ==========================================
+  // LOGIN / LOGOUT
+  // ==========================================
+  loginBtn.addEventListener('click', async () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    if (!email || !password) {
+      alert('Please enter email and password');
+      return;
+    }
+
+    try {
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Logging in...';
+
+      const res = await apiRequest('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (res.ok && res.data && res.data.jwtToken) {
+        setAuthToken(res.data.jwtToken);
+        authUser = res.data;
+        localStorage.setItem('bc_auth_user', JSON.stringify(authUser));
+        updateAuthUI();
+      }
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Login';
+    }
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    authToken = '';
+    authUser = null;
+    localStorage.removeItem('bc_jwt_token');
+    localStorage.removeItem('bc_auth_user');
+    tokenInput.value = '';
+    updateAuthUI();
+  });
+
+  // ==========================================
+  // DYNAMIC FORM SWITCHING
+  // ==========================================
+  contentTypeSelect.addEventListener('change', updateFormFields);
+
+  function updateFormFields() {
+    const type = contentTypeSelect.value;
+
+    // Reset visibility
+    imageGroup.classList.add('hidden');
+    videoGroup.classList.add('hidden');
+    pollGroup.classList.add('hidden');
+    quizGroup.classList.add('hidden');
+    repostGroup.classList.add('hidden');
+
+    switch (type) {
+      case 'TEXT':
+        textLabel.textContent = 'Text / Thought (required) *';
+        break;
+      case 'IMAGE':
+        textLabel.textContent = 'Caption (optional)';
+        imageGroup.classList.remove('hidden');
+        break;
+      case 'VIDEO':
+        textLabel.textContent = 'Caption (optional)';
+        videoGroup.classList.remove('hidden');
+        break;
+      case 'POLL':
+        textLabel.textContent = 'Poll Question (required) *';
+        pollGroup.classList.remove('hidden');
+        break;
+      case 'QUIZ':
+        textLabel.textContent = 'Quiz Question (required) *';
+        quizGroup.classList.remove('hidden');
+        break;
+      case 'REPOST':
+        textLabel.textContent = 'Quote Text (optional, max 500 chars)';
+        repostGroup.classList.remove('hidden');
+        break;
+    }
+  }
+
+  // Previews
+  imageFile.addEventListener('change', () => {
+    const file = imageFile.files[0];
+    if (file) {
+      imagePreview.src = URL.createObjectURL(file);
+      imagePreviewBox.classList.remove('hidden');
+    } else {
+      imagePreviewBox.classList.add('hidden');
+    }
+  });
+
+  videoFile.addEventListener('change', () => {
+    const file = videoFile.files[0];
+    if (file) {
+      videoPreview.src = URL.createObjectURL(file);
+      videoPreviewBox.classList.remove('hidden');
+    } else {
+      videoPreviewBox.classList.add('hidden');
+    }
+  });
+
+  // Poll options manipulation
+  addPollOptionBtn.addEventListener('click', () => {
+    const currentCount = pollOptionsContainer.querySelectorAll('.option-row').length;
+    if (currentCount >= 6) {
+      alert('Maximum 6 options allowed');
+      return;
+    }
+    const div = document.createElement('div');
+    div.className = 'option-row';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'poll-option-input';
+    input.placeholder = `Option ${currentCount + 1}`;
+    div.appendChild(input);
+    pollOptionsContainer.appendChild(div);
+  });
+
+  removePollOptionBtn.addEventListener('click', () => {
+    const rows = pollOptionsContainer.querySelectorAll('.option-row');
+    if (rows.length <= 2) {
+      alert('Minimum 2 options required');
+      return;
+    }
+    rows[rows.length - 1].remove();
+  });
+
+  // Quiz options manipulation
+  addQuizOptionBtn.addEventListener('click', () => {
+    const currentCount = quizOptionsContainer.querySelectorAll('.option-row').length;
+    if (currentCount >= 6) {
+      alert('Maximum 6 options allowed');
+      return;
+    }
+    const div = document.createElement('div');
+    div.className = 'option-row';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'quiz-option-input';
+    input.placeholder = `Option ${currentCount + 1}`;
+    
+    const label = document.createElement('label');
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'quizCorrect';
+    radio.value = currentCount;
+    label.appendChild(radio);
+    label.appendChild(document.createTextNode(' Correct'));
+
+    div.appendChild(input);
+    div.appendChild(label);
+    quizOptionsContainer.appendChild(div);
+  });
+
+  removeQuizOptionBtn.addEventListener('click', () => {
+    const rows = quizOptionsContainer.querySelectorAll('.option-row');
+    if (rows.length <= 2) {
+      alert('Minimum 2 options required');
+      return;
+    }
+    rows[rows.length - 1].remove();
+  });
+
+  // ==========================================
+  // CONTENT FORM SUBMISSION
+  // ==========================================
+  document.getElementById('contentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const type = contentTypeSelect.value;
+    const contentName = contentNameInput.value.trim() || null;
+    const text = contentText.value.trim() || null;
+    const skipValidation = skipValidationCheck.checked;
+
+    // Client-side validations (unless skipped)
+    if (!skipValidation) {
+      if (type === 'TEXT' && !text) {
+        alert('Text cannot be empty for TEXT content');
+        return;
+      }
+      if (type === 'IMAGE' && (!imageFile.files || imageFile.files.length === 0)) {
+        alert('Please select an image file');
+        return;
+      }
+      if (type === 'VIDEO' && (!videoFile.files || videoFile.files.length === 0)) {
+        alert('Please select a video file');
+        return;
+      }
+      if (type === 'POLL') {
+        if (!text) {
+          alert('Poll question is required');
+          return;
+        }
+        const opts = Array.from(pollOptionsContainer.querySelectorAll('.poll-option-input'))
+          .map(i => i.value.trim())
+          .filter(v => v.length > 0);
+        if (opts.length < 2 || opts.length > 6) {
+          alert('Poll needs 2 to 6 non-blank options');
+          return;
+        }
+      }
+      if (type === 'QUIZ') {
+        if (!text) {
+          alert('Quiz question is required');
+          return;
+        }
+        const rows = Array.from(quizOptionsContainer.querySelectorAll('.option-row'));
+        const opts = rows.map(r => r.querySelector('.quiz-option-input').value.trim()).filter(v => v.length > 0);
+        if (opts.length < 2 || opts.length > 6) {
+          alert('Quiz needs 2 to 6 non-blank options');
+          return;
+        }
+      }
+      if (type === 'REPOST') {
+        const parentId = parentContentId.value.trim();
+        if (!parentId) {
+          alert('Parent Content ID is required for repost');
+          return;
+        }
+        if (text && text.length > 500) {
+          alert('Quote text cannot exceed 500 characters');
+          return;
+        }
+      }
+    }
+
+    // Build payload JSON
+    const payload = {
+      contentType: type,
+      contentName: contentName,
+      text: text
+    };
+
+    if (type === 'POLL') {
+      const opts = Array.from(pollOptionsContainer.querySelectorAll('.poll-option-input'))
+        .map(i => i.value.trim())
+        .filter(v => v.length > 0);
+      payload.pollOptions = opts;
+      if (pollDuration.value) {
+        payload.pollDurationHours = parseInt(pollDuration.value, 10);
+      }
+    }
+
+    if (type === 'QUIZ') {
+      const rows = Array.from(quizOptionsContainer.querySelectorAll('.option-row'));
+      const quizOptions = rows.map((r) => {
+        const txt = r.querySelector('.quiz-option-input').value.trim();
+        const isCorrect = r.querySelector('input[type="radio"]').checked;
+        return { text: txt, correct: isCorrect };
+      });
+      payload.quizOptions = quizOptions;
+      if (quizExplanation.value.trim()) {
+        payload.quizExplanation = quizExplanation.value.trim();
+      }
+      if (quizDuration.value) {
+        payload.quizDurationHours = parseInt(quizDuration.value, 10);
+      }
+    }
+
+    if (type === 'REPOST') {
+      payload.parentContentId = parentContentId.value.trim() || null;
+    }
+
+    // Build FormData
+    const formData = new FormData();
+    formData.append('data', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+
+    if (type === 'IMAGE' && imageFile.files && imageFile.files.length > 0) {
+      formData.append('file', imageFile.files[0]);
+    } else if (type === 'VIDEO' && videoFile.files && videoFile.files.length > 0) {
+      formData.append('file', videoFile.files[0]);
+    }
+
+    try {
+      submitContentBtn.disabled = true;
+      submitContentBtn.textContent = 'Uploading...';
+
+      await apiRequest('/api/content', {
+        method: 'POST',
+        body: formData
+      });
+    } finally {
+      submitContentBtn.disabled = false;
+      submitContentBtn.textContent = 'Upload Content';
+    }
+  });
+
+  // ==========================================
+  // EXTRA API TEST TOOLS
+  // ==========================================
+  // Content by ID
+  document.getElementById('getContentBtn').addEventListener('click', () => {
+    const id = document.getElementById('getContentId').value.trim();
+    if (!id) return alert('Enter Content ID');
+    apiRequest(`/api/content/${id}`, { method: 'GET' });
+  });
+
+  // Delete Content by ID
+  document.getElementById('deleteContentBtn').addEventListener('click', () => {
+    const id = document.getElementById('getContentId').value.trim();
+    if (!id) return alert('Enter Content ID');
+    if (!confirm(`Are you sure you want to delete content ${id}?`)) return;
+    apiRequest(`/api/content/${id}`, { method: 'DELETE' });
+  });
+
+  // Feed by User ID
+  document.getElementById('getFeedBtn').addEventListener('click', () => {
+    const id = document.getElementById('feedUserId').value.trim();
+    if (!id) return alert('Enter User ID');
+    apiRequest(`/api/content/user/${id}?page=0&size=10`, { method: 'GET' });
+  });
+
+  // Vote on Poll (Content ID based)
+  document.getElementById('voteBtn').addEventListener('click', () => {
+    const contentId = document.getElementById('voteContentId').value.trim();
+    const optionId = document.getElementById('voteOptionId').value.trim();
+    if (!contentId || !optionId) return alert('Content ID and Option ID are required');
+
+    apiRequest(`/api/content/${contentId}/poll/vote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ optionId })
+    });
+  });
+
+  // Answer Quiz
+  document.getElementById('quizAnswerBtn').addEventListener('click', () => {
+    const contentId = document.getElementById('quizContentId').value.trim();
+    const optionId = document.getElementById('quizAnswerOptionId').value.trim();
+    if (!contentId || !optionId) return alert('Content ID and Option ID are required');
+
+    apiRequest(`/api/content/${contentId}/quiz/answer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ optionId })
+    });
+  });
+
+  // Like / Unlike Content
+  document.getElementById('likeContentBtn').addEventListener('click', () => {
+    const id = document.getElementById('likeContentId').value.trim();
+    if (!id) return alert('Enter Content ID');
+    apiRequest(`/api/content/${id}/like`, { method: 'PUT' });
+  });
+
+  document.getElementById('unlikeContentBtn').addEventListener('click', () => {
+    const id = document.getElementById('likeContentId').value.trim();
+    if (!id) return alert('Enter Content ID');
+    apiRequest(`/api/content/${id}/like`, { method: 'DELETE' });
+  });
+
+  // Fetch Content Likers Table
+  document.getElementById('getLikersBtn').addEventListener('click', async () => {
+    const id = document.getElementById('likeContentId').value.trim();
+    const page = parseInt(document.getElementById('contentLikersPage').value, 10) || 0;
+    if (!id) return alert('Enter Content ID');
+    const res = await apiRequest(`/api/content/${id}/likes?page=${page}&size=20`, { method: 'GET' });
+    if (res.ok && res.data && res.data.content) {
+      renderLikersTable(`Likers for Content ${id}`, res.data.content);
+    }
+  });
+
+  // Like / Unlike Comment
+  document.getElementById('likeCommentBtn').addEventListener('click', () => {
+    const id = document.getElementById('likeCommentId').value.trim();
+    if (!id) return alert('Enter Comment ID');
+    apiRequest(`/api/comments/${id}/like`, { method: 'PUT' });
+  });
+
+  document.getElementById('unlikeCommentBtn').addEventListener('click', () => {
+    const id = document.getElementById('likeCommentId').value.trim();
+    if (!id) return alert('Enter Comment ID');
+    apiRequest(`/api/comments/${id}/like`, { method: 'DELETE' });
+  });
+
+  // Fetch Comment Likers Table
+  document.getElementById('getCommentLikersBtn').addEventListener('click', async () => {
+    const id = document.getElementById('likeCommentId').value.trim();
+    const page = parseInt(document.getElementById('commentLikersPage').value, 10) || 0;
+    if (!id) return alert('Enter Comment ID');
+    const res = await apiRequest(`/api/comments/${id}/likes?page=${page}&size=20`, { method: 'GET' });
+    if (res.ok && res.data && res.data.content) {
+      renderLikersTable(`Likers for Comment ${id}`, res.data.content);
+    }
+  });
+
+  function renderLikersTable(title, likersList) {
+    const box = document.getElementById('likersTableBox');
+    const titleEl = document.getElementById('likersTableTitle');
+    const tbody = document.getElementById('likersTableBody');
+
+    titleEl.textContent = title;
+    tbody.innerHTML = '';
+
+    if (!likersList || likersList.length === 0) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 3;
+      td.textContent = 'No likers found';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+    } else {
+      likersList.forEach(l => {
+        const tr = document.createElement('tr');
+
+        const tdId = document.createElement('td');
+        tdId.textContent = l.id || 'N/A';
+
+        const tdUser = document.createElement('td');
+        tdUser.textContent = l.userName || 'N/A';
+
+        const tdName = document.createElement('td');
+        tdName.textContent = l.displayName || 'N/A';
+
+        tr.appendChild(tdId);
+        tr.appendChild(tdUser);
+        tr.appendChild(tdName);
+        tbody.appendChild(tr);
+      });
+    }
+
+    box.classList.remove('hidden');
+  }
+
+  // Post Comment
+  document.getElementById('postCommentBtn').addEventListener('click', () => {
+    const contentId = document.getElementById('commentContentId').value.trim();
+    const parentId = document.getElementById('commentParentId').value.trim() || null;
+    const text = document.getElementById('commentText').value.trim();
+
+    if (!contentId || !text) return alert('Content ID and text are required');
+
+    apiRequest(`/api/content/${contentId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, parentCommentId: parentId })
+    });
+  });
+
+  // Get Comments
+  document.getElementById('getCommentsBtn').addEventListener('click', () => {
+    const contentId = document.getElementById('fetchCommentsContentId').value.trim();
+    if (!contentId) return alert('Enter Content ID');
+    apiRequest(`/api/content/${contentId}/comments?limit=20`, { method: 'GET' });
+  });
+
+  // Get Replies
+  document.getElementById('getRepliesBtn').addEventListener('click', () => {
+    const commentId = document.getElementById('fetchRepliesCommentId').value.trim();
+    if (!commentId) return alert('Enter Comment ID');
+    apiRequest(`/api/comments/${commentId}/replies`, { method: 'GET' });
+  });
+
+  // Edit Comment (PATCH)
+  document.getElementById('editCommentBtn').addEventListener('click', () => {
+    const commentId = document.getElementById('editCommentId').value.trim();
+    const text = document.getElementById('editCommentText').value.trim();
+    if (!commentId || !text) return alert('Comment ID and new text are required');
+
+    apiRequest(`/api/comments/${commentId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+  });
+
+  // Delete Comment (DELETE)
+  document.getElementById('deleteCommentBtn').addEventListener('click', () => {
+    const commentId = document.getElementById('deleteCommentId').value.trim();
+    if (!commentId) return alert('Enter Comment ID');
+    if (!confirm(`Are you sure you want to delete comment ${commentId}?`)) return;
+
+    apiRequest(`/api/comments/${commentId}`, { method: 'DELETE' });
+  });
+
+  // ==========================================
+  // CORE FETCH & INSPECTOR LOGIC
+  // ==========================================
+  async function apiRequest(endpoint, options = {}) {
+    const url = baseUrl + endpoint;
+    const startTime = performance.now();
+
+    options.headers = options.headers || {};
+    if (authToken) {
+      options.headers['Authorization'] = authToken;
+    }
+
+    try {
+      const response = await fetch(url, options);
+      const duration = Math.round(performance.now() - startTime);
+
+      let data = null;
+      const text = await response.text();
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch (err) {
+        data = text;
+      }
+
+      displayResponse(response.status, response.statusText, duration, data, options.method || 'GET', endpoint, options.body);
+      return { ok: response.ok, status: response.status, data };
+    } catch (networkError) {
+      const duration = Math.round(performance.now() - startTime);
+      displayResponse(0, 'Network / CORS Error', duration, { error: networkError.message }, options.method || 'GET', endpoint, options.body);
+      return { ok: false, status: 0, error: networkError };
+    }
+  }
+
+  function displayResponse(status, statusText, durationMs, bodyData, method, endpoint, requestBody) {
+    responseStatus.classList.remove('hidden', 'status-2xx', 'status-4xx', 'status-5xx', 'status-err');
+
+    if (status >= 200 && status < 300) {
+      responseStatus.textContent = `${status} ${statusText || 'OK'}`;
+      responseStatus.className = 'status-badge status-2xx';
+    } else if (status >= 400 && status < 500) {
+      responseStatus.textContent = `${status} ${statusText || 'Client Error'}`;
+      responseStatus.className = 'status-badge status-4xx';
+    } else if (status >= 500) {
+      responseStatus.textContent = `${status} ${statusText || 'Server Error'}`;
+      responseStatus.className = 'status-badge status-5xx';
+    } else {
+      responseStatus.textContent = `0 Network / CORS Error`;
+      responseStatus.className = 'status-badge status-err';
+    }
+
+    responseTime.textContent = `${durationMs} ms`;
+
+    // Render interactive poll/quiz card if present
+    renderInteractiveCard(bodyData);
+
+    // Safe JSON rendering avoiding XSS
+    if (typeof bodyData === 'object' && bodyData !== null) {
+      responseBody.textContent = JSON.stringify(bodyData, null, 2);
+    } else if (bodyData !== undefined && bodyData !== null) {
+      responseBody.textContent = String(bodyData);
+    } else {
+      responseBody.textContent = '// Empty response body';
+    }
+
+    // Add to history
+    addToHistory(method, endpoint, status, durationMs, bodyData, requestBody);
+  }
+
+  function renderInteractiveCard(data) {
+    interactiveCard.innerHTML = '';
+    interactiveCard.classList.add('hidden');
+
+    if (!data || typeof data !== 'object') return;
+
+    // Case A: Content with Poll
+    if (data.contentType === 'POLL' && data.poll) {
+      const poll = data.poll;
+      const contentId = data.id;
+
+      const title = document.createElement('h3');
+      title.textContent = `📊 Poll: ${data.text || 'Question'}`;
+      interactiveCard.appendChild(title);
+
+      const sub = document.createElement('p');
+      sub.style.fontSize = '0.8rem';
+      sub.style.color = 'var(--text-muted)';
+      sub.textContent = `Total Votes: ${poll.totalVotes} | Expired: ${poll.expired ? 'Yes' : 'No'}`;
+      interactiveCard.appendChild(sub);
+
+      const optsDiv = document.createElement('div');
+      optsDiv.className = 'interactive-options';
+
+      poll.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'interactive-opt-btn';
+        if (poll.votedOptionId === opt.id) {
+          btn.classList.add('correct-choice');
+        }
+
+        const spanText = document.createElement('span');
+        spanText.textContent = opt.text + (poll.votedOptionId === opt.id ? ' (Your Vote)' : '');
+
+        const spanVotes = document.createElement('span');
+        spanVotes.style.fontWeight = 'bold';
+        spanVotes.textContent = `${opt.votes} votes`;
+
+        btn.appendChild(spanText);
+        btn.appendChild(spanVotes);
+
+        btn.addEventListener('click', async () => {
+          const res = await apiRequest(`/api/content/${contentId}/poll/vote`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ optionId: opt.id })
+          });
+          if (res.ok && res.data) {
+            data.poll = res.data;
+            renderInteractiveCard(data);
+          }
+        });
+
+        optsDiv.appendChild(btn);
+      });
+
+      interactiveCard.appendChild(optsDiv);
+      interactiveCard.classList.remove('hidden');
+    }
+
+    // Case B: Content with Quiz
+    else if (data.contentType === 'QUIZ' && data.quiz) {
+      const quiz = data.quiz;
+      const contentId = data.id;
+
+      const title = document.createElement('h3');
+      title.textContent = `🧠 Quiz: ${data.text || 'Question'}`;
+      interactiveCard.appendChild(title);
+
+      const sub = document.createElement('p');
+      sub.style.fontSize = '0.8rem';
+      sub.style.color = 'var(--text-muted)';
+      sub.textContent = `Answers: ${quiz.totalAnswers} (${quiz.correctAnswers} correct) | Expired: ${quiz.expired ? 'Yes' : 'No'}`;
+      interactiveCard.appendChild(sub);
+
+      if (quiz.explanation) {
+        const exp = document.createElement('p');
+        exp.style.fontSize = '0.85rem';
+        exp.style.marginTop = '0.3rem';
+        exp.style.color = 'var(--primary)';
+        exp.textContent = `Explanation: ${quiz.explanation}`;
+        interactiveCard.appendChild(exp);
+      }
+
+      const optsDiv = document.createElement('div');
+      optsDiv.className = 'interactive-options';
+
+      quiz.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'interactive-opt-btn';
+
+        if (opt.correct === true) {
+          btn.classList.add('correct-choice');
+        } else if (opt.correct === false && quiz.myAnswerOptionId === opt.id) {
+          btn.classList.add('wrong-choice');
+        }
+
+        const spanText = document.createElement('span');
+        let label = opt.text;
+        if (quiz.myAnswerOptionId === opt.id) label += ' (Your Answer)';
+        if (opt.correct === true) label += ' ✓ Correct';
+        spanText.textContent = label;
+
+        const spanCount = document.createElement('span');
+        spanCount.style.fontWeight = 'bold';
+        spanCount.textContent = `${opt.pickCount} picks`;
+
+        btn.appendChild(spanText);
+        btn.appendChild(spanCount);
+
+        btn.addEventListener('click', async () => {
+          const res = await apiRequest(`/api/content/${contentId}/quiz/answer`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ optionId: opt.id })
+          });
+          if (res.ok && res.data) {
+            quiz.explanation = res.data.explanation;
+            quiz.totalAnswers = res.data.totalAnswers;
+            quiz.correctAnswers = res.data.correctAnswers;
+            quiz.options = res.data.options;
+            quiz.myAnswerOptionId = opt.id;
+            quiz.myAnswerCorrect = res.data.correct;
+            renderInteractiveCard(data);
+          }
+        });
+
+        optsDiv.appendChild(btn);
+      });
+
+      interactiveCard.appendChild(optsDiv);
+      interactiveCard.classList.remove('hidden');
+    }
+  }
+
+  function addToHistory(method, endpoint, status, durationMs, bodyData, requestBody) {
+    const item = { method, endpoint, status, durationMs, bodyData, requestBody, time: new Date().toLocaleTimeString() };
+    requestHistory.unshift(item);
+    if (requestHistory.length > 10) requestHistory.pop();
+
+    renderHistory();
+  }
+
+  function renderHistory() {
+    historyList.innerHTML = '';
+    requestHistory.forEach((item) => {
+      const div = document.createElement('div');
+      div.className = 'history-item';
+
+      const left = document.createElement('div');
+      left.className = 'history-item-left';
+      left.textContent = `[${item.time}] ${item.method} ${item.endpoint}`;
+      left.addEventListener('click', () => {
+        displayResponse(item.status, '', item.durationMs, item.bodyData, item.method, item.endpoint, item.requestBody);
+      });
+
+      const actions = document.createElement('div');
+      actions.className = 'history-item-actions';
+
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'btn-secondary btn-sm';
+      copyBtn.textContent = 'Copy curl';
+      copyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        copyAsCurl(item);
+      });
+
+      const badge = document.createElement('span');
+      badge.className = `status-badge ${item.status >= 200 && item.status < 300 ? 'status-2xx' : item.status >= 400 && item.status < 500 ? 'status-4xx' : 'status-5xx'}`;
+      badge.textContent = `${item.status} (${item.durationMs}ms)`;
+
+      actions.appendChild(copyBtn);
+      actions.appendChild(badge);
+
+      div.appendChild(left);
+      div.appendChild(actions);
+
+      historyList.appendChild(div);
+    });
+  }
+
+  function copyAsCurl(item) {
+    let curl = `curl -X ${item.method} "${baseUrl}${item.endpoint}"`;
+    if (authToken) {
+      curl += ` \\\n  -H "Authorization: ${authToken}"`;
+    }
+    if (item.requestBody) {
+      if (typeof item.requestBody === 'string') {
+        curl += ` \\\n  -H "Content-Type: application/json" \\\n  -d '${item.requestBody.replace(/'/g, "'\\''")}'`;
+      }
+    }
+    navigator.clipboard.writeText(curl).then(() => {
+      alert('cURL command copied to clipboard!');
+    }).catch(() => {
+      prompt('Copy your cURL command:', curl);
+    });
+  }
+
+  // Initialize form
+  updateFormFields();
+</script>
+
+</body>
+</html>

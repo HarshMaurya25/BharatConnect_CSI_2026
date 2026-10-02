@@ -1,6 +1,6 @@
 package com.project.BharatConnect.repo;
 
-import com.project.BharatConnect.entity.PollOption;
+import com.project.BharatConnect.entity.QuizOption;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,9 +10,9 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface PollOptionRepository extends JpaRepository<PollOption, UUID> {
+public interface QuizOptionRepository extends JpaRepository<QuizOption, UUID> {
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE PollOption o SET o.voteCount = o.voteCount + 1 WHERE o.id = :id")
-    void incrementVoteCount(@Param("id") UUID id);
+    @Query("UPDATE QuizOption o SET o.pickCount = o.pickCount + 1 WHERE o.id = :id")
+    void incrementPickCount(@Param("id") UUID id);
 }

@@ -80,6 +80,9 @@ public class Content {
     @OneToOne(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Poll poll;
 
+    @OneToOne(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Quiz quiz;
+
     @OneToMany(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ContentLike> likes = new ArrayList<>();

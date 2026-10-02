@@ -2,10 +2,12 @@ package com.project.BharatConnect.service.content;
 
 import com.project.BharatConnect.dto.content.ContentCreateRequest;
 import com.project.BharatConnect.dto.content.ContentResponseDto;
+import com.project.BharatConnect.dto.content.QuizAnswerResponseDto;
 import com.project.BharatConnect.entity.Content;
 import com.project.BharatConnect.entity.ContentType;
 import com.project.BharatConnect.entity.Poll;
 import com.project.BharatConnect.entity.Profile;
+import com.project.BharatConnect.entity.Quiz;
 import com.project.BharatConnect.error.exception.ContentNotFoundException;
 import com.project.BharatConnect.error.exception.InvalidMediaException;
 import com.project.BharatConnect.error.exception.InvalidRequestException;
@@ -42,6 +44,7 @@ public class ContentService {
     private final ProfileRepository profileRepository;
     private final MediaService mediaService;
     private final PollService pollService;
+    private final QuizService quizService;
     private final ContentMapper contentMapper;
 
     @Transactional
@@ -107,6 +110,10 @@ public class ContentService {
                 Poll poll = pollService.createPoll(content, req);
                 content.setPoll(poll);
             }
+            case QUIZ -> {
+                Quiz quiz = quizService.createQuiz(content, req);
+                content.setQuiz(quiz);
+            }
             case REPOST -> {
                 contentRepository.incrementRepostCount(resolvedParent.getId());
             }
@@ -140,6 +147,40 @@ public class ContentService {
                     throw new InvalidRequestException("Poll options must be non-blank and unique");
                 if (req.getPollDurationHours() != null && req.getPollDurationHours() <= 0)
                     throw new InvalidRequestException("Poll duration must be positive");
+            }
+            case QUIZ -> {
+                if (!hasText) throw new InvalidRequestException("Quiz question is required");
+                if (hasFile) throw new InvalidRequestException("Quizzes cannot have a file");
+                List<ContentCreateRequest.QuizOptionCreateRequest> opts = req.getQuizOptions();
+                if (opts == null || opts.size() < 2 || opts.size() > 6) {
+                    throw new InvalidRequestException("Quiz needs 2 to 6 options");
+                }
+                for (ContentCreateRequest.QuizOptionCreateRequest opt : opts) {
+                    if (opt.getText() == null || opt.getText().isBlank()) {
+                        throw new InvalidRequestException("Quiz option text cannot be blank");
+                    }
+                    if (opt.getText().trim().length() > 100) {
+                        throw new InvalidRequestException("Quiz option text cannot exceed 100 characters");
+                    }
+                }
+                long distinct = opts.stream()
+                        .map(o -> o.getText().trim().toLowerCase())
+                        .distinct().count();
+                if (distinct != opts.size()) {
+                    throw new InvalidRequestException("Quiz options must be unique");
+                }
+                long correctCount = opts.stream()
+                        .filter(o -> Boolean.TRUE.equals(o.getCorrect()))
+                        .count();
+                if (correctCount != 1) {
+                    throw new InvalidRequestException("Quiz must have exactly one correct option");
+                }
+                if (req.getQuizExplanation() != null && req.getQuizExplanation().length() > 500) {
+                    throw new InvalidRequestException("Quiz explanation cannot exceed 500 characters");
+                }
+                if (req.getQuizDurationHours() != null && req.getQuizDurationHours() <= 0) {
+                    throw new InvalidRequestException("Quiz duration must be positive");
+                }
             }
             case REPOST -> {
                 if (hasFile) throw new InvalidRequestException("Reposts cannot have a file");
@@ -221,11 +262,27 @@ public class ContentService {
     }
 
     @Transactional
-    public void votePoll(UUID pollId, UUID optionId) {
+    public ContentResponseDto.PollDto votePollByContentId(UUID contentId, UUID optionId) {
         UserDetail userDetail = (UserDetail) Objects.requireNonNull(
                 SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
         UUID profileId = userDetail.getUser().getUserId();
-        pollService.vote(pollId, optionId, profileId);
+        return pollService.voteByContentId(contentId, optionId, profileId);
+    }
+
+    @Transactional
+    public ContentResponseDto.PollDto votePoll(UUID pollId, UUID optionId) {
+        UserDetail userDetail = (UserDetail) Objects.requireNonNull(
+                SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
+        UUID profileId = userDetail.getUser().getUserId();
+        return pollService.vote(pollId, optionId, profileId);
+    }
+
+    @Transactional
+    public QuizAnswerResponseDto answerQuiz(UUID contentId, UUID optionId) {
+        UserDetail userDetail = (UserDetail) Objects.requireNonNull(
+                SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
+        UUID profileId = userDetail.getUser().getUserId();
+        return quizService.answerByContentId(contentId, optionId, profileId);
     }
 
     private UUID getCurrentUserId() {

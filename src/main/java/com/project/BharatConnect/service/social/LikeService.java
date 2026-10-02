@@ -1,18 +1,16 @@
 package com.project.BharatConnect.service.social;
 
-import com.project.BharatConnect.dto.profile.ProfileResponseDto;
 import com.project.BharatConnect.dto.social.LikeResponseDto;
+import com.project.BharatConnect.dto.social.LikerDto;
 import com.project.BharatConnect.entity.Comment;
 import com.project.BharatConnect.entity.CommentLike;
 import com.project.BharatConnect.entity.Content;
 import com.project.BharatConnect.entity.ContentLike;
-import com.project.BharatConnect.entity.Profile;
 import com.project.BharatConnect.error.exception.CommentNotFoundException;
 import com.project.BharatConnect.error.exception.ConflictException;
 import com.project.BharatConnect.error.exception.ContentNotFoundException;
 import com.project.BharatConnect.event.CommentLikedEvent;
 import com.project.BharatConnect.event.ContentLikedEvent;
-import com.project.BharatConnect.mapper.ProfileMapper;
 import com.project.BharatConnect.repo.CommentLikeRepository;
 import com.project.BharatConnect.repo.CommentRepository;
 import com.project.BharatConnect.repo.ContentLikeRepository;
@@ -48,7 +46,6 @@ public class LikeService {
     private final CommentLikeRepository commentLikeRepository;
     private final ProfileRepository profileRepository;
     private final ContentCounterRepository contentCounterRepository;
-    private final ProfileMapper profileMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final RateLimiterService rateLimiterService;
 
@@ -101,7 +98,7 @@ public class LikeService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ProfileResponseDto> getContentLikers(UUID contentId, int page, int size) {
+    public Page<LikerDto> getContentLikers(UUID contentId, int page, int size) {
         if (!contentRepository.existsById(contentId)) {
             throw new ContentNotFoundException("Content not found");
         }
@@ -109,8 +106,7 @@ public class LikeService {
         int effectiveSize = Math.min(Math.max(1, size), 100);
         Pageable pageable = PageRequest.of(Math.max(0, page), effectiveSize);
 
-        Page<Profile> likersPage = contentLikeRepository.findLikersByContentId(contentId, pageable);
-        return likersPage.map(profileMapper::toResponse);
+        return contentLikeRepository.findLikersByContentId(contentId, pageable);
     }
 
     @Transactional
@@ -164,6 +160,18 @@ public class LikeService {
                 .orElse(0L);
 
         return new LikeResponseDto(false, currentLikeCount);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<LikerDto> getCommentLikers(UUID commentId, int page, int size) {
+        if (!commentRepository.existsById(commentId)) {
+            throw new CommentNotFoundException("Comment not found");
+        }
+
+        int effectiveSize = Math.min(Math.max(1, size), 100);
+        Pageable pageable = PageRequest.of(Math.max(0, page), effectiveSize);
+
+        return commentLikeRepository.findLikersByCommentId(commentId, pageable);
     }
 
     private UUID getCurrentProfileId() {

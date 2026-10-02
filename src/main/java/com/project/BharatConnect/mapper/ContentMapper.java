@@ -3,21 +3,22 @@ package com.project.BharatConnect.mapper;
 import com.project.BharatConnect.dto.content.ContentResponseDto;
 import com.project.BharatConnect.dto.content.ContentResponseDto.PollDto;
 import com.project.BharatConnect.dto.content.ContentResponseDto.PollOptionDto;
+import com.project.BharatConnect.dto.content.ContentResponseDto.QuizDto;
+import com.project.BharatConnect.dto.content.ContentResponseDto.QuizOptionDto;
 import com.project.BharatConnect.dto.content.ContentResponseDto.QuotedContentDto;
 import com.project.BharatConnect.entity.Content;
 import com.project.BharatConnect.entity.ContentType;
 import com.project.BharatConnect.entity.Poll;
 import com.project.BharatConnect.entity.Profile;
-import com.project.BharatConnect.repo.ContentLikeRepository;
-import com.project.BharatConnect.repo.PollRepository;
-import com.project.BharatConnect.repo.PollVoteRepository;
+import com.project.BharatConnect.entity.Quiz;
+import com.project.BharatConnect.entity.QuizAnswer;
+import com.project.BharatConnect.repo.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -26,6 +27,8 @@ public class ContentMapper {
 
     private final PollRepository pollRepository;
     private final PollVoteRepository pollVoteRepository;
+    private final QuizRepository quizRepository;
+    private final QuizAnswerRepository quizAnswerRepository;
     private final ContentLikeRepository contentLikeRepository;
 
     public ContentResponseDto toResponse(Content content, String displayName, String username) {
@@ -95,6 +98,53 @@ public class ContentMapper {
             }
         }
 
+        QuizDto quizDto = null;
+        if (content.getContentType() == ContentType.QUIZ) {
+            Quiz quiz = content.getQuiz();
+            if (quiz == null && content.getId() != null) {
+                quiz = quizRepository.findByContentIdWithOptions(content.getId()).orElse(null);
+            }
+            if (quiz != null) {
+                boolean expired = quiz.getExpiresAt() != null && quiz.getExpiresAt().isBefore(LocalDateTime.now());
+                boolean isCreator = currentUserId != null && content.getProfile() != null &&
+                        currentUserId.equals(content.getProfile().getUserId());
+
+                QuizAnswer myAnswer = null;
+                if (currentUserId != null && quiz.getId() != null) {
+                    myAnswer = quizAnswerRepository.findByQuizIdAndProfileUserId(quiz.getId(), currentUserId).orElse(null);
+                }
+
+                boolean showAnswers = expired || isCreator || myAnswer != null;
+
+                UUID myAnswerOptionId = myAnswer != null ? myAnswer.getOption().getId() : null;
+                Boolean myAnswerCorrect = myAnswer != null ? myAnswer.getCorrect() : null;
+                String explanation = showAnswers ? quiz.getExplanation() : null;
+
+                List<QuizOptionDto> optionDtos = quiz.getOptions() != null
+                        ? quiz.getOptions().stream()
+                        .map(o -> new QuizOptionDto(
+                                o.getId(),
+                                o.getOptionText(),
+                                o.getPickCount(),
+                                showAnswers ? o.getCorrect() : null
+                        ))
+                        .toList()
+                        : Collections.emptyList();
+
+                quizDto = new QuizDto(
+                        quiz.getId(),
+                        quiz.getExpiresAt(),
+                        expired,
+                        explanation,
+                        myAnswerOptionId,
+                        myAnswerCorrect,
+                        quiz.getTotalAnswers() != null ? quiz.getTotalAnswers() : 0L,
+                        quiz.getCorrectAnswers() != null ? quiz.getCorrectAnswers() : 0L,
+                        optionDtos
+                );
+            }
+        }
+
         QuotedContentDto quotedDto = null;
         if (content.getContentType() == ContentType.REPOST) {
             Content parent = content.getParentContent();
@@ -139,6 +189,7 @@ public class ContentMapper {
                 .createdAt(content.getCreatedAt())
                 .updatedAt(content.getUpdatedAt())
                 .poll(pollDto)
+                .quiz(quizDto)
                 .quoted(quotedDto)
                 .build();
     }

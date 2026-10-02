@@ -109,7 +109,7 @@ public class CommentService {
                 .orElseThrow(() -> new CommentNotFoundException("Comment not found"));
 
         if (comment.isDeleted()) {
-            throw new InvalidRequestException("Cannot edit a deleted comment");
+            throw new ConflictException("Cannot edit a deleted comment");
         }
 
         if (!comment.getProfile().getUserId().equals(profileId)) {
@@ -136,7 +136,7 @@ public class CommentService {
                 .orElseThrow(() -> new CommentNotFoundException("Comment not found"));
 
         if (comment.isDeleted()) {
-            return;
+            throw new ConflictException("Comment already deleted");
         }
 
         UUID authorId = comment.getProfile().getUserId();

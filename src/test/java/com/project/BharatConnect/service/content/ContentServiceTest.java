@@ -2,10 +2,12 @@ package com.project.BharatConnect.service.content;
 
 import com.project.BharatConnect.dto.content.ContentCreateRequest;
 import com.project.BharatConnect.dto.content.ContentResponseDto;
+import com.project.BharatConnect.dto.content.QuizAnswerResponseDto;
 import com.project.BharatConnect.entity.Content;
 import com.project.BharatConnect.entity.ContentType;
 import com.project.BharatConnect.entity.Poll;
 import com.project.BharatConnect.entity.Profile;
+import com.project.BharatConnect.entity.Quiz;
 import com.project.BharatConnect.entity.User;
 import com.project.BharatConnect.error.exception.ContentNotFoundException;
 import com.project.BharatConnect.error.exception.InvalidMediaException;
@@ -64,6 +66,9 @@ class ContentServiceTest {
 
     @Mock
     private PollService pollService;
+
+    @Mock
+    private QuizService quizService;
 
     @Mock
     private ContentMapper contentMapper;
@@ -348,6 +353,72 @@ class ContentServiceTest {
         assertEquals("Poll options must be non-blank and unique", ex.getMessage());
     }
 
+    // --- QUIZ TESTS ---
+    @Test
+    void testUploadQuiz_Success() {
+        when(profileRepository.findById(userId)).thenReturn(Optional.of(profile));
+        ContentCreateRequest request = ContentCreateRequest.builder()
+                .contentType(ContentType.QUIZ)
+                .text("What is 2 + 2?")
+                .quizOptions(List.of(
+                        new ContentCreateRequest.QuizOptionCreateRequest("3", false),
+                        new ContentCreateRequest.QuizOptionCreateRequest("4", true),
+                        new ContentCreateRequest.QuizOptionCreateRequest("5", false)
+                ))
+                .quizExplanation("Basic arithmetic")
+                .quizDurationHours(24)
+                .build();
+
+        when(contentRepository.save(any(Content.class))).thenAnswer(i -> {
+            Content c = i.getArgument(0);
+            c.setId(UUID.randomUUID());
+            return c;
+        });
+        when(quizService.createQuiz(any(), eq(request))).thenReturn(Quiz.builder().build());
+        when(contentMapper.toResponse(any(Content.class), any(), any(), any(), anyBoolean())).thenReturn(ContentResponseDto.builder().build());
+
+        ContentResponseDto response = contentService.uploadContent(request, null);
+
+        assertNotNull(response);
+        verify(quizService, times(1)).createQuiz(any(Content.class), eq(request));
+    }
+
+    @Test
+    void testUploadQuiz_MissingCorrectOption_ThrowsInvalidRequestException() {
+        when(profileRepository.findById(userId)).thenReturn(Optional.of(profile));
+        ContentCreateRequest request = ContentCreateRequest.builder()
+                .contentType(ContentType.QUIZ)
+                .text("Question?")
+                .quizOptions(List.of(
+                        new ContentCreateRequest.QuizOptionCreateRequest("A", false),
+                        new ContentCreateRequest.QuizOptionCreateRequest("B", false)
+                ))
+                .build();
+
+        InvalidRequestException ex = assertThrows(InvalidRequestException.class, () ->
+                contentService.uploadContent(request, null)
+        );
+        assertEquals("Quiz must have exactly one correct option", ex.getMessage());
+    }
+
+    @Test
+    void testUploadQuiz_MultipleCorrectOptions_ThrowsInvalidRequestException() {
+        when(profileRepository.findById(userId)).thenReturn(Optional.of(profile));
+        ContentCreateRequest request = ContentCreateRequest.builder()
+                .contentType(ContentType.QUIZ)
+                .text("Question?")
+                .quizOptions(List.of(
+                        new ContentCreateRequest.QuizOptionCreateRequest("A", true),
+                        new ContentCreateRequest.QuizOptionCreateRequest("B", true)
+                ))
+                .build();
+
+        InvalidRequestException ex = assertThrows(InvalidRequestException.class, () ->
+                contentService.uploadContent(request, null)
+        );
+        assertEquals("Quiz must have exactly one correct option", ex.getMessage());
+    }
+
     // --- REPOST TESTS ---
     @Test
     void testUploadRepost_MissingParentContentId_ThrowsInvalidRequestException() {
@@ -544,5 +615,35 @@ class ContentServiceTest {
         verify(contentRepository, times(1)).decrementRepostCount(parentId);
         verify(contentRepository, times(1)).clearParentContentReferences(contentId);
         verify(contentRepository, times(1)).delete(content);
+    }
+
+    @Test
+    void testVotePollByContentId_DelegatesToPollService() {
+        UUID contentId = UUID.randomUUID();
+        UUID optionId = UUID.randomUUID();
+        ContentResponseDto.PollDto pollDto = new ContentResponseDto.PollDto(UUID.randomUUID(), null, false, optionId, 1L, List.of());
+
+        when(pollService.voteByContentId(contentId, optionId, userId)).thenReturn(pollDto);
+
+        ContentResponseDto.PollDto result = contentService.votePollByContentId(contentId, optionId);
+
+        assertNotNull(result);
+        assertEquals(optionId, result.votedOptionId());
+        verify(pollService, times(1)).voteByContentId(contentId, optionId, userId);
+    }
+
+    @Test
+    void testAnswerQuiz_DelegatesToQuizService() {
+        UUID contentId = UUID.randomUUID();
+        UUID optionId = UUID.randomUUID();
+        QuizAnswerResponseDto ansDto = new QuizAnswerResponseDto(true, optionId, "Exp", 1L, 1L, List.of());
+
+        when(quizService.answerByContentId(contentId, optionId, userId)).thenReturn(ansDto);
+
+        QuizAnswerResponseDto result = contentService.answerQuiz(contentId, optionId);
+
+        assertNotNull(result);
+        assertTrue(result.correct());
+        verify(quizService, times(1)).answerByContentId(contentId, optionId, userId);
     }
 }

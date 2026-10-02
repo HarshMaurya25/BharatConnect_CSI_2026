@@ -1,11 +1,14 @@
 package com.project.BharatConnect.service.content;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.BharatConnect.dto.content.ContentResponseDto;
 import com.project.BharatConnect.entity.*;
 import com.project.BharatConnect.mapper.ContentMapper;
 import com.project.BharatConnect.repo.ContentLikeRepository;
 import com.project.BharatConnect.repo.PollRepository;
 import com.project.BharatConnect.repo.PollVoteRepository;
+import com.project.BharatConnect.repo.QuizAnswerRepository;
+import com.project.BharatConnect.repo.QuizRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +32,12 @@ class ContentMapperTest {
 
     @Mock
     private PollVoteRepository pollVoteRepository;
+
+    @Mock
+    private QuizRepository quizRepository;
+
+    @Mock
+    private QuizAnswerRepository quizAnswerRepository;
 
     @Mock
     private ContentLikeRepository contentLikeRepository;
@@ -84,6 +93,100 @@ class ContentMapperTest {
         assertEquals(2, response.getPoll().options().size());
         assertEquals(3L, response.getPoll().options().get(0).votes());
         assertEquals(7L, response.getPoll().options().get(1).votes());
+    }
+
+    @Test
+    void testToResponse_QuizMapping_HidesAnswersForUnansweredViewer() throws Exception {
+        UUID quizId = UUID.randomUUID();
+        UUID optId1 = UUID.randomUUID();
+        UUID optId2 = UUID.randomUUID();
+        UUID viewerId = UUID.randomUUID(); // not creator
+
+        Quiz quiz = Quiz.builder()
+                .id(quizId)
+                .explanation("This is secret until answered")
+                .expiresAt(LocalDateTime.now().plusDays(1))
+                .totalAnswers(5L)
+                .correctAnswers(3L)
+                .build();
+
+        QuizOption opt1 = QuizOption.builder().id(optId1).quiz(quiz).optionText("Delhi").correct(true).pickCount(3L).position(0).build();
+        QuizOption opt2 = QuizOption.builder().id(optId2).quiz(quiz).optionText("Mumbai").correct(false).pickCount(2L).position(1).build();
+        quiz.setOptions(List.of(opt1, opt2));
+
+        Content content = Content.builder()
+                .id(UUID.randomUUID())
+                .profile(profile) // creator is profile (profileId != viewerId)
+                .contentType(ContentType.QUIZ)
+                .text("Capital of India?")
+                .quiz(quiz)
+                .build();
+
+        when(quizAnswerRepository.findByQuizIdAndProfileUserId(quizId, viewerId)).thenReturn(Optional.empty());
+
+        ContentResponseDto response = contentMapper.toResponse(content, profile.getDisplayName(), profile.getUserName(), viewerId);
+
+        assertNotNull(response);
+        assertNotNull(response.getQuiz());
+        assertNull(response.getQuiz().explanation(), "Explanation must be hidden");
+        assertNull(response.getQuiz().myAnswerOptionId());
+        assertNull(response.getQuiz().myAnswerCorrect());
+        assertNull(response.getQuiz().options().get(0).correct(), "Correct flag must be null/hidden");
+        assertNull(response.getQuiz().options().get(1).correct(), "Correct flag must be null/hidden");
+
+        // Assert JSON does not contain correct flag or explanation
+        ObjectMapper om = new ObjectMapper();
+        String json = om.writeValueAsString(response.getQuiz());
+        assertFalse(json.contains("\"correct\""), "JSON must NOT leak 'correct' field");
+        assertFalse(json.contains("\"explanation\""), "JSON must NOT leak 'explanation' field");
+    }
+
+    @Test
+    void testToResponse_QuizMapping_ShowsAnswersWhenAnswered() {
+        UUID quizId = UUID.randomUUID();
+        UUID optId1 = UUID.randomUUID();
+        UUID optId2 = UUID.randomUUID();
+        UUID viewerId = UUID.randomUUID();
+
+        Quiz quiz = Quiz.builder()
+                .id(quizId)
+                .explanation("Delhi is the capital")
+                .expiresAt(LocalDateTime.now().plusDays(1))
+                .totalAnswers(5L)
+                .correctAnswers(3L)
+                .build();
+
+        QuizOption opt1 = QuizOption.builder().id(optId1).quiz(quiz).optionText("Delhi").correct(true).pickCount(3L).position(0).build();
+        QuizOption opt2 = QuizOption.builder().id(optId2).quiz(quiz).optionText("Mumbai").correct(false).pickCount(2L).position(1).build();
+        quiz.setOptions(List.of(opt1, opt2));
+
+        Content content = Content.builder()
+                .id(UUID.randomUUID())
+                .profile(profile)
+                .contentType(ContentType.QUIZ)
+                .text("Capital of India?")
+                .quiz(quiz)
+                .build();
+
+        QuizAnswer answer = QuizAnswer.builder()
+                .id(UUID.randomUUID())
+                .quiz(quiz)
+                .option(opt1)
+                .profile(Profile.builder().userId(viewerId).build())
+                .correct(true)
+                .build();
+
+        when(quizAnswerRepository.findByQuizIdAndProfileUserId(quizId, viewerId)).thenReturn(Optional.of(answer));
+
+        ContentResponseDto response = contentMapper.toResponse(content, profile.getDisplayName(), profile.getUserName(), viewerId);
+
+        assertNotNull(response);
+        assertNotNull(response.getQuiz());
+        assertEquals("Delhi is the capital", response.getQuiz().explanation());
+        assertEquals(optId1, response.getQuiz().myAnswerOptionId());
+        assertEquals(Boolean.TRUE, response.getQuiz().myAnswerCorrect());
+        assertEquals(Boolean.TRUE, response.getQuiz().options().get(0).correct());
+        assertEquals(Boolean.FALSE, response.getQuiz().options().get(1).correct());
     }
 
     @Test

@@ -80,6 +80,7 @@ class CommentServiceTest {
     private Profile profile;
     private Content content;
     private UUID contentId;
+    private Authentication authentication;
 
     @BeforeEach
     void setUp() {
@@ -88,7 +89,7 @@ class CommentServiceTest {
         profile = Profile.builder().userId(userId).userName("user1").build();
 
         UserDetail userDetail = new UserDetail(user);
-        Authentication authentication = mock(Authentication.class);
+        authentication = mock(Authentication.class);
         lenient().when(authentication.getPrincipal()).thenReturn(userDetail);
         lenient().doReturn(Collections.emptyList()).when(authentication).getAuthorities();
 
@@ -262,6 +263,20 @@ class CommentServiceTest {
     }
 
     @Test
+    void testEditComment_DeletedComment_ThrowsConflictException() {
+        UUID commentId = UUID.randomUUID();
+        Comment comment = Comment.builder().id(commentId).profile(profile).text("Old text").deleted(true).build();
+
+        when(commentRepository.findByIdWithProfileAndParent(commentId)).thenReturn(Optional.of(comment));
+
+        CommentUpdateRequest request = CommentUpdateRequest.builder().text("Updated text").build();
+        ConflictException ex = assertThrows(ConflictException.class, () ->
+                commentService.editComment(commentId, request)
+        );
+        assertEquals("Cannot edit a deleted comment", ex.getMessage());
+    }
+
+    @Test
     void testDeleteReply_AlwaysHardDelete() {
         UUID parentId = UUID.randomUUID();
         Comment parent = Comment.builder().id(parentId).build();
@@ -326,6 +341,111 @@ class CommentServiceTest {
         verify(contentCounterRepository, times(1)).decrementContentCommentCount(contentId);
         verify(commentLikeRepository, times(1)).deleteByCommentId(commentId);
         verify(commentRepository, times(1)).delete(comment);
+    }
+
+    @Test
+    void testDeleteComment_ByContentOwner_Success() {
+        UUID commentId = UUID.randomUUID();
+        Profile commentAuthor = Profile.builder().userId(UUID.randomUUID()).build();
+        // Current user is content owner
+        Comment comment = Comment.builder()
+                .id(commentId)
+                .content(content)
+                .profile(commentAuthor)
+                .replyCount(0L)
+                .deleted(false)
+                .build();
+
+        when(commentRepository.findByIdWithProfileAndParent(commentId)).thenReturn(Optional.of(comment));
+        when(commentRepository.existsByParentCommentId(commentId)).thenReturn(false);
+
+        commentService.deleteComment(commentId);
+
+        verify(commentRepository, times(1)).delete(comment);
+    }
+
+    @Test
+    void testDeleteComment_ByAdmin_Success() {
+        UUID adminId = UUID.randomUUID();
+        User adminUser = User.builder().userId(adminId).build();
+        UserDetail adminDetail = new UserDetail(adminUser);
+
+        Authentication adminAuth = mock(Authentication.class);
+        lenient().when(adminAuth.getPrincipal()).thenReturn(adminDetail);
+        doReturn(List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))).when(adminAuth).getAuthorities();
+
+        SecurityContext adminContext = mock(SecurityContext.class);
+        when(adminContext.getAuthentication()).thenReturn(adminAuth);
+        SecurityContextHolder.setContext(adminContext);
+
+        UUID commentId = UUID.randomUUID();
+        Profile randomAuthor = Profile.builder().userId(UUID.randomUUID()).build();
+        Profile randomContentOwner = Profile.builder().userId(UUID.randomUUID()).build();
+        Content randomContent = Content.builder().id(UUID.randomUUID()).profile(randomContentOwner).build();
+
+        Comment comment = Comment.builder()
+                .id(commentId)
+                .content(randomContent)
+                .profile(randomAuthor)
+                .replyCount(0L)
+                .deleted(false)
+                .build();
+
+        when(commentRepository.findByIdWithProfileAndParent(commentId)).thenReturn(Optional.of(comment));
+        when(commentRepository.existsByParentCommentId(commentId)).thenReturn(false);
+
+        commentService.deleteComment(commentId);
+
+        verify(commentRepository, times(1)).delete(comment);
+    }
+
+    @Test
+    void testDeleteComment_ByRandomUser_ThrowsAccessDeniedException() {
+        UUID randomUserId = UUID.randomUUID();
+        User randomUser = User.builder().userId(randomUserId).build();
+        UserDetail randomDetail = new UserDetail(randomUser);
+
+        Authentication userAuth = mock(Authentication.class);
+        lenient().when(userAuth.getPrincipal()).thenReturn(randomDetail);
+        lenient().doReturn(Collections.emptyList()).when(userAuth).getAuthorities();
+
+        SecurityContext userContext = mock(SecurityContext.class);
+        when(userContext.getAuthentication()).thenReturn(userAuth);
+        SecurityContextHolder.setContext(userContext);
+
+        UUID commentId = UUID.randomUUID();
+        Profile author = Profile.builder().userId(UUID.randomUUID()).build();
+        Profile contentOwner = Profile.builder().userId(UUID.randomUUID()).build();
+        Content c = Content.builder().id(UUID.randomUUID()).profile(contentOwner).build();
+
+        Comment comment = Comment.builder()
+                .id(commentId)
+                .content(c)
+                .profile(author)
+                .replyCount(0L)
+                .deleted(false)
+                .build();
+
+        when(commentRepository.findByIdWithProfileAndParent(commentId)).thenReturn(Optional.of(comment));
+
+        assertThrows(AccessDeniedException.class, () -> commentService.deleteComment(commentId));
+        verify(commentRepository, never()).delete(any());
+    }
+
+    @Test
+    void testDeleteComment_AlreadyDeleted_ThrowsConflictException() {
+        UUID commentId = UUID.randomUUID();
+        Comment comment = Comment.builder()
+                .id(commentId)
+                .content(content)
+                .profile(profile)
+                .deleted(true)
+                .build();
+
+        when(commentRepository.findByIdWithProfileAndParent(commentId)).thenReturn(Optional.of(comment));
+
+        ConflictException ex = assertThrows(ConflictException.class, () -> commentService.deleteComment(commentId));
+        assertEquals("Comment already deleted", ex.getMessage());
     }
 
     @Test

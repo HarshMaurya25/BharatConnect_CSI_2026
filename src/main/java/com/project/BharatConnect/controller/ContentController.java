@@ -3,10 +3,9 @@ package com.project.BharatConnect.controller;
 import com.project.BharatConnect.dto.comment.CommentCreateRequest;
 import com.project.BharatConnect.dto.comment.CommentResponseDto;
 import com.project.BharatConnect.dto.common.CursorPageResponse;
-import com.project.BharatConnect.dto.content.ContentCreateRequest;
-import com.project.BharatConnect.dto.content.ContentResponseDto;
-import com.project.BharatConnect.dto.profile.ProfileResponseDto;
+import com.project.BharatConnect.dto.content.*;
 import com.project.BharatConnect.dto.social.LikeResponseDto;
+import com.project.BharatConnect.dto.social.LikerDto;
 import com.project.BharatConnect.error.exception.InvalidRequestException;
 import com.project.BharatConnect.service.comment.CommentService;
 import com.project.BharatConnect.service.content.ContentService;
@@ -46,13 +45,28 @@ public class ContentController {
         );
     }
 
+    @PostMapping("/{contentId}/poll/vote")
+    public ResponseEntity<ContentResponseDto.PollDto> votePollByContent(
+            @PathVariable UUID contentId,
+            @RequestBody @Valid PollVoteRequest request
+    ) {
+        return ResponseEntity.ok(contentService.votePollByContentId(contentId, request.getOptionId()));
+    }
+
     @PostMapping("/polls/{pollId}/vote/{optionId}")
-    public ResponseEntity<Void> votePoll(
+    public ResponseEntity<ContentResponseDto.PollDto> votePoll(
             @PathVariable UUID pollId,
             @PathVariable UUID optionId
     ) {
-        contentService.votePoll(pollId, optionId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(contentService.votePoll(pollId, optionId));
+    }
+
+    @PostMapping("/{contentId}/quiz/answer")
+    public ResponseEntity<QuizAnswerResponseDto> answerQuiz(
+            @PathVariable UUID contentId,
+            @RequestBody @Valid QuizAnswerRequest request
+    ) {
+        return ResponseEntity.ok(contentService.answerQuiz(contentId, request.getOptionId()));
     }
 
     @PutMapping("/{contentId}/like")
@@ -70,7 +84,7 @@ public class ContentController {
     }
 
     @GetMapping("/{contentId}/likes")
-    public ResponseEntity<Page<ProfileResponseDto>> getContentLikers(
+    public ResponseEntity<Page<LikerDto>> getContentLikers(
             @PathVariable UUID contentId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size

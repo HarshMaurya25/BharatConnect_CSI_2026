@@ -1,7 +1,8 @@
 package com.project.BharatConnect.service.social;
 
-import com.project.BharatConnect.dto.profile.ProfileResponseDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.BharatConnect.dto.social.LikeResponseDto;
+import com.project.BharatConnect.dto.social.LikerDto;
 import com.project.BharatConnect.entity.Comment;
 import com.project.BharatConnect.entity.Content;
 import com.project.BharatConnect.entity.ContentLike;
@@ -12,7 +13,6 @@ import com.project.BharatConnect.error.exception.ConflictException;
 import com.project.BharatConnect.error.exception.ContentNotFoundException;
 import com.project.BharatConnect.event.CommentLikedEvent;
 import com.project.BharatConnect.event.ContentLikedEvent;
-import com.project.BharatConnect.mapper.ProfileMapper;
 import com.project.BharatConnect.repo.CommentLikeRepository;
 import com.project.BharatConnect.repo.CommentRepository;
 import com.project.BharatConnect.repo.ContentLikeRepository;
@@ -38,6 +38,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -70,9 +71,6 @@ class LikeServiceTest {
 
     @Mock
     private ContentCounterRepository contentCounterRepository;
-
-    @Mock
-    private ProfileMapper profileMapper;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -225,17 +223,41 @@ class LikeServiceTest {
     }
 
     @Test
-    void testGetContentLikers_MaxPageSizeEnforced() {
+    void testGetContentLikers_MaxPageSizeEnforced_AndOnlyThreeKeys() throws Exception {
         when(contentRepository.existsById(contentId)).thenReturn(true);
-        Page<Profile> mockPage = new PageImpl<>(List.of(profile));
+        LikerDto liker = new LikerDto(userId, "harsh", "Harsh M");
+        Page<LikerDto> mockPage = new PageImpl<>(List.of(liker));
         when(contentLikeRepository.findLikersByContentId(eq(contentId), any(Pageable.class))).thenReturn(mockPage);
-        when(profileMapper.toResponse(any())).thenReturn(ProfileResponseDto.builder().build());
 
-        Page<ProfileResponseDto> result = likeService.getContentLikers(contentId, 0, 500);
+        Page<LikerDto> result = likeService.getContentLikers(contentId, 0, 500);
 
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(contentLikeRepository).findLikersByContentId(eq(contentId), argThat(p -> p.getPageSize() == 100));
+
+        // Assert JSON contains exactly the 3 keys: id, userName, displayName
+        ObjectMapper om = new ObjectMapper();
+        String json = om.writeValueAsString(result.getContent().get(0));
+        Map<String, Object> map = om.readValue(json, Map.class);
+        assertEquals(3, map.keySet().size());
+        assertTrue(map.containsKey("id"));
+        assertTrue(map.containsKey("userName"));
+        assertTrue(map.containsKey("displayName"));
+    }
+
+    @Test
+    void testGetCommentLikers_MaxPageSizeEnforced() {
+        UUID commentId = UUID.randomUUID();
+        when(commentRepository.existsById(commentId)).thenReturn(true);
+        LikerDto liker = new LikerDto(userId, "harsh", "Harsh M");
+        Page<LikerDto> mockPage = new PageImpl<>(List.of(liker));
+        when(commentLikeRepository.findLikersByCommentId(eq(commentId), any(Pageable.class))).thenReturn(mockPage);
+
+        Page<LikerDto> result = likeService.getCommentLikers(commentId, 0, 500);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        verify(commentLikeRepository).findLikersByCommentId(eq(commentId), argThat(p -> p.getPageSize() == 100));
     }
 
     @Test

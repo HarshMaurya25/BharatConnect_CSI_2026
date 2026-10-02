@@ -55,7 +55,10 @@ public class SecurityConfig {
                                         "/api/auth/**",
                                         "/swagger-ui/**",
                                         "/swagger-ui.html",
-                                        "/v3/api-docs/**"
+                                        "/v3/api-docs/**",
+                                        "/test-upload.html",
+                                        "/static/**",
+                                        "/*.html"
                                 ).permitAll()
                                 .requestMatchers("/connect/**").permitAll()
                                 .anyRequest().authenticated())
@@ -84,7 +87,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 

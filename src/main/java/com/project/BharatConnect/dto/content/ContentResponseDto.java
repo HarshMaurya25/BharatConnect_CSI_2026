@@ -1,5 +1,6 @@
 package com.project.BharatConnect.dto.content;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.project.BharatConnect.entity.ContentType;
 import lombok.*;
 
@@ -45,6 +46,8 @@ public class ContentResponseDto {
 
     private PollDto poll;
 
+    private QuizDto quiz;
+
     private QuotedContentDto quoted;
 
     public record PollDto(
@@ -60,6 +63,27 @@ public class ContentResponseDto {
             UUID id,
             String text,
             long votes
+    ) {}
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record QuizDto(
+            UUID quizId,
+            LocalDateTime expiresAt,
+            boolean expired,
+            String explanation,
+            UUID myAnswerOptionId,
+            Boolean myAnswerCorrect,
+            long totalAnswers,
+            long correctAnswers,
+            List<QuizOptionDto> options
+    ) {}
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record QuizOptionDto(
+            UUID id,
+            String text,
+            long pickCount,
+            Boolean correct
     ) {}
 
     public record QuotedContentDto(

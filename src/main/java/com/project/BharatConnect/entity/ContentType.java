@@ -5,5 +5,6 @@ public enum ContentType {
     IMAGE,
     VIDEO,
     POLL,
-    REPOST
+    REPOST,
+    QUIZ
 }

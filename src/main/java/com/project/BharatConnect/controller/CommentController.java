@@ -4,10 +4,12 @@ import com.project.BharatConnect.dto.comment.CommentResponseDto;
 import com.project.BharatConnect.dto.comment.CommentUpdateRequest;
 import com.project.BharatConnect.dto.common.CursorPageResponse;
 import com.project.BharatConnect.dto.social.LikeResponseDto;
+import com.project.BharatConnect.dto.social.LikerDto;
 import com.project.BharatConnect.service.comment.CommentService;
 import com.project.BharatConnect.service.social.LikeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,6 +37,15 @@ public class CommentController {
         return ResponseEntity.ok(likeService.unlikeComment(commentId));
     }
 
+    @GetMapping("/{commentId}/likes")
+    public ResponseEntity<Page<LikerDto>> getCommentLikers(
+            @PathVariable UUID commentId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return ResponseEntity.ok(likeService.getCommentLikers(commentId, page, size));
+    }
+
     @GetMapping("/{commentId}/replies")
     public ResponseEntity<CursorPageResponse<CommentResponseDto>> getReplies(
             @PathVariable UUID commentId
@@ -55,6 +66,6 @@ public class CommentController {
             @PathVariable UUID commentId
     ) {
         commentService.deleteComment(commentId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }
