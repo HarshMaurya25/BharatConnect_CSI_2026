@@ -11,6 +11,7 @@ import com.project.BharatConnect.repo.ProfileRepository;
 import com.project.BharatConnect.repo.UserRepository;
 import com.project.BharatConnect.service.media.MediaService;
 import com.project.BharatConnect.service.user.UserDetail;
+import jakarta.validation.ValidationException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -36,6 +37,16 @@ public class ProfileService {
 
     @Transactional
     public Boolean createProfileWithUsername(String username){
+
+        if (username == null || username.isBlank()) {
+            throw new ValidationException("Username cannot be empty");
+        }
+
+        if (!username.matches("^[a-zA-Z0-9_$]+$")) {
+            throw new ValidationException(
+                    "Username can contain only letters, numbers, _ and $"
+            );
+        }
         UserDetail userDetail = (UserDetail) Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
 
         assert userDetail != null;
@@ -111,5 +122,30 @@ public class ProfileService {
 
         return url;
     }
+
+
+    @Transactional
+    public ProfileResponseDto getProfileById(UUID userId){
+        Profile profile = profileRepository
+                .findById(userId)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("Profile not found")
+                );
+
+        return profileMapper.toResponse(profile);
+    }
+
+    @Transactional
+    public ProfileResponseDto getProfileByUsername(String username){
+        Profile profile = profileRepository
+                .findByUserName(username)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("Profile not found")
+                );
+
+        return profileMapper.toResponse(profile);
+    }
+
+
 
 }

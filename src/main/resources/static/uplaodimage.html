@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile Image Upload</title>
+</head>
+
+<body>
+
+<h3>Upload Profile Image</h3>
+
+<input
+        type="text"
+        id="token"
+        placeholder="Enter JWT token"
+        style="width: 400px;"
+>
+
+<br><br>
+
+<input
+        type="file"
+        id="profileImage"
+        accept="image/*"
+>
+
+<br><br>
+
+<button onclick="uploadImage()">Upload</button>
+
+<p id="result"></p>
+
+<script>
+    async function uploadImage() {
+
+        const token = document.getElementById("token").value;
+        const file = document.getElementById("profileImage").files[0];
+
+        if (!token) {
+            alert("Enter JWT token");
+            return;
+        }
+
+        if (!file) {
+            alert("Select an image");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("profileImage", file);
+
+        try {
+
+            const response = await fetch(
+                "http://localhost:8090/api/profile/image",
+                {
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    },
+                    body: formData
+                }
+            );
+
+            const result = await response.text();
+
+            document.getElementById("result").innerText =
+                response.status + " : " + result;
+
+        } catch (error) {
+
+            document.getElementById("result").innerText =
+                "Error: " + error.message;
+
+        }
+    }
+</script>
+
+</body>
+</html>

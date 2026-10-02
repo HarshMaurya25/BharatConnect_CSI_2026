@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.UUID;
+
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/profile")
@@ -42,5 +44,23 @@ public class ProfileController {
     ) {
         String url = profileService.uploadProfile(profileImage);
         return ResponseEntity.ok(url);
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<ProfileResponseDto> getProfileById(
+            @PathVariable UUID userId
+    ) {
+        return ResponseEntity.ok(
+                profileService.getProfileById(userId)
+        );
+    }
+
+    @GetMapping("/username/{username}")
+    public ResponseEntity<ProfileResponseDto> getProfileByUsername(
+            @PathVariable String username
+    ) {
+        return ResponseEntity.ok(
+                profileService.getProfileByUsername(username)
+        );
     }
 }
