@@ -1,9 +1,9 @@
 package com.project.BharatConnect.error.handler;
 import com.project.BharatConnect.dto.exception.ApiError;
 import com.project.BharatConnect.error.ErrorBuilder;
-import com.project.BharatConnect.error.exception.ImageProcessingException;
-import com.project.BharatConnect.error.exception.ImageTooLargeException;
-import com.project.BharatConnect.error.exception.InvalidImageException;
+import com.project.BharatConnect.error.exception.MediaProcessingException;
+import com.project.BharatConnect.error.exception.MediaTooLargeException;
+import com.project.BharatConnect.error.exception.InvalidMediaException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -20,9 +20,9 @@ public class ImageExceptionHandler {
         this.errorBuilder = errorBuilder;
     }
 
-    @ExceptionHandler(InvalidImageException.class)
+    @ExceptionHandler(InvalidMediaException.class)
     public ResponseEntity<List<ApiError>> handleInvalidImage(
-            InvalidImageException exception
+            InvalidMediaException exception
     ) {
         return errorBuilder.buildError(
                 exception.getMessage(),
@@ -31,9 +31,9 @@ public class ImageExceptionHandler {
         );
     }
 
-    @ExceptionHandler(ImageTooLargeException.class)
+    @ExceptionHandler(MediaTooLargeException.class)
     public ResponseEntity<List<ApiError>> handleImageTooLarge(
-            ImageTooLargeException exception
+            MediaTooLargeException exception
     ) {
         return errorBuilder.buildError(
                 exception.getMessage(),
@@ -42,9 +42,9 @@ public class ImageExceptionHandler {
         );
     }
 
-    @ExceptionHandler(ImageProcessingException.class)
+    @ExceptionHandler(MediaProcessingException.class)
     public ResponseEntity<List<ApiError>> handleImageProcessing(
-            ImageProcessingException exception
+            MediaProcessingException exception
     ) {
         return errorBuilder.buildError(
                 exception.getMessage(),
