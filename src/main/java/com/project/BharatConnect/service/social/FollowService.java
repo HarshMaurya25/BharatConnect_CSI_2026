@@ -1,5 +1,7 @@
 package com.project.BharatConnect.service.social;
 
+import com.project.BharatConnect.dto.profile.ProfileResponseDto;
+import com.project.BharatConnect.dto.social.FollowUserResponseDto;
 import com.project.BharatConnect.entity.Follow;
 import com.project.BharatConnect.entity.Profile;
 import com.project.BharatConnect.error.exception.InvalidRequestException;
@@ -9,6 +11,9 @@ import com.project.BharatConnect.service.user.UserDetail;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -129,5 +134,29 @@ public class FollowService {
         );
 
         return true;
+    }
+
+    @Transactional
+    public Page<FollowUserResponseDto> getFollowers(
+            UUID userId,
+            int page,
+            int size
+    ) {
+        return followRepository.findFollowers(
+                userId,
+                PageRequest.of(page, size)
+        );
+    }
+
+    @Transactional
+    public Page<FollowUserResponseDto> getFollowing(
+            UUID userId,
+            int page,
+            int size
+    ) {
+        return followRepository.findFollowing(
+                userId,
+                PageRequest.of(page, size)
+        );
     }
 }
