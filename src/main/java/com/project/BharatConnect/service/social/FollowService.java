@@ -1,15 +1,16 @@
 package com.project.BharatConnect.service.social;
 
-import com.project.BharatConnect.dto.social.FollowEvent;
-import com.project.BharatConnect.dto.social.UnfollowEvent;
 import com.project.BharatConnect.entity.Follow;
+import com.project.BharatConnect.entity.Profile;
 import com.project.BharatConnect.error.exception.InvalidRequestException;
 import com.project.BharatConnect.repo.FollowRepository;
+import com.project.BharatConnect.repo.ProfileRepository;
 import com.project.BharatConnect.service.user.UserDetail;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,6 +22,7 @@ import java.util.UUID;
 public class FollowService {
 
     private final FollowRepository followRepository;
+    private final ProfileRepository profileRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -32,7 +34,6 @@ public class FollowService {
                                 .getAuthentication()
                 ).getPrincipal();
 
-        assert userDetail != null;
         UUID followerId = userDetail.getUser().getUserId();
 
         if (followerId.equals(followingId)) {
@@ -50,6 +51,15 @@ public class FollowService {
             );
         }
 
+        Profile followerProfile = profileRepository.findById(followerId)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("Follower profile not found")
+                );
+
+        Profile followingProfile = profileRepository.findById(followingId)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("Following profile not found")
+                );
         Follow follow = Follow.builder()
                 .followerId(followerId)
                 .followingId(followingId)
@@ -58,11 +68,12 @@ public class FollowService {
 
         followRepository.save(follow);
 
-        eventPublisher.publishEvent(
-                new FollowEvent(
-                        followerId,
-                        followingId
-                )
+        followerProfile.setFollowing(
+                followerProfile.getFollowing() + 1
+        );
+
+        followingProfile.setFollower(
+                followingProfile.getFollower() + 1
         );
 
         return true;
@@ -76,8 +87,6 @@ public class FollowService {
                         SecurityContextHolder.getContext()
                                 .getAuthentication()
                 ).getPrincipal();
-
-        assert userDetail != null;
 
         UUID followerId = userDetail.getUser().getUserId();
 
@@ -96,16 +105,27 @@ public class FollowService {
             );
         }
 
+        Profile followerProfile = profileRepository.findById(followerId)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("Follower profile not found")
+                );
+
+        Profile followingProfile = profileRepository.findById(followingId)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("Following profile not found")
+                );
+
         followRepository.deleteByFollowerIdAndFollowingId(
                 followerId,
                 followingId
         );
 
-        eventPublisher.publishEvent(
-                new UnfollowEvent(
-                        followerId,
-                        followingId
-                )
+        followerProfile.setFollowing(
+                followerProfile.getFollowing() - 1
+        );
+
+        followingProfile.setFollower(
+                followingProfile.getFollower() - 1
         );
 
         return true;

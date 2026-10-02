@@ -18,7 +18,7 @@ public class FollowCountScheduler {
     private final FollowEventListener followEventListener;
     private final ProfileRepository profileRepository;
 
-    @Scheduled(fixedRate = 5000)
+//    @Scheduled(fixedRate = 5000)
     @Transactional
     public void updateFollowCounts() {
 
