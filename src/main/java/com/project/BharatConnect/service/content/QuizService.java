@@ -7,11 +7,13 @@ import com.project.BharatConnect.entity.*;
 import com.project.BharatConnect.error.exception.ConflictException;
 import com.project.BharatConnect.error.exception.ContentNotFoundException;
 import com.project.BharatConnect.error.exception.InvalidRequestException;
+import com.project.BharatConnect.event.QuizAnsweredEvent;
 import com.project.BharatConnect.repo.ProfileRepository;
 import com.project.BharatConnect.repo.QuizAnswerRepository;
 import com.project.BharatConnect.repo.QuizOptionRepository;
 import com.project.BharatConnect.repo.QuizRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ public class QuizService {
     private final QuizOptionRepository quizOptionRepository;
     private final QuizAnswerRepository quizAnswerRepository;
     private final ProfileRepository profileRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public Quiz createQuiz(Content content, ContentCreateRequest req) {
         Quiz quiz = Quiz.builder()
@@ -97,6 +100,12 @@ public class QuizService {
 
         quizOptionRepository.incrementPickCount(optionId);
         quizRepository.incrementQuizCounters(quizId, isCorrect);
+
+        UUID contentId = quiz.getContent() != null ? quiz.getContent().getId() : null;
+        UUID ownerId = (quiz.getContent() != null && quiz.getContent().getProfile() != null)
+                ? quiz.getContent().getProfile().getUserId()
+                : null;
+        eventPublisher.publishEvent(new QuizAnsweredEvent(contentId, profileId, ownerId, isCorrect));
 
         Quiz updatedQuiz = quizRepository.findByIdWithOptions(quizId).orElse(quiz);
         UUID correctOptionId = updatedQuiz.getOptions().stream()

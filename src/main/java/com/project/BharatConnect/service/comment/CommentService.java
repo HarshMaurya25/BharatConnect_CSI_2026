@@ -9,6 +9,7 @@ import com.project.BharatConnect.entity.Content;
 import com.project.BharatConnect.entity.Profile;
 import com.project.BharatConnect.error.exception.*;
 import com.project.BharatConnect.event.CommentCreatedEvent;
+import com.project.BharatConnect.event.CommentDeletedEvent;
 import com.project.BharatConnect.mapper.CommentMapper;
 import com.project.BharatConnect.repo.CommentLikeRepository;
 import com.project.BharatConnect.repo.CommentRepository;
@@ -91,10 +92,12 @@ public class CommentService {
 
         commentRepository.save(comment);
 
+        UUID contentOwnerId = content.getProfile() != null ? content.getProfile().getUserId() : null;
         eventPublisher.publishEvent(new CommentCreatedEvent(
                 comment.getId(),
                 contentId,
                 profileId,
+                contentOwnerId,
                 parent != null ? parent.getId() : null
         ));
 
@@ -168,6 +171,14 @@ public class CommentService {
                 commentRepository.delete(comment);
             }
         }
+
+        eventPublisher.publishEvent(new CommentDeletedEvent(
+                commentId,
+                comment.getContent().getId(),
+                authorId,
+                contentOwnerId,
+                comment.getParentComment() != null ? comment.getParentComment().getId() : null
+        ));
     }
 
     @Transactional(readOnly = true)

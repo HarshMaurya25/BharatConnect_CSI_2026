@@ -10,3 +10,31 @@ springdoc:
 server:
   port: 8090
 
+app:
+  gamification:
+    time-zone: "Asia/Kolkata"
+    global-daily-cap: 200
+    likes-received-daily-cap: 20
+    comments-received-daily-cap: 40
+    reposts-received-daily-cap: 30
+    post-text: 5
+    post-image: 10
+    post-video: 15
+    post-poll: 8
+    post-quiz: 12
+    post-repost: 3
+    comment-create: 3
+    reply-create: 2
+    like-received-content: 1
+    like-received-comment: 1
+    comment-received-content: 2
+    repost-received-content: 2
+    poll-vote: 1
+    quiz-answer: 1
+    quiz-correct-bonus: 5
+    streak-daily: 5
+    first-post-bonus: 20
+    first-comment-bonus: 10
+    first-like-given-bonus: 5
+
+

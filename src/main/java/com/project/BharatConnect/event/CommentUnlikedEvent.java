@@ -7,12 +7,8 @@ import java.util.UUID;
 
 @Getter
 @RequiredArgsConstructor
-public class CommentLikedEvent {
+public class CommentUnlikedEvent {
     private final UUID commentId;
-    private final UUID profileId; // likerId
+    private final UUID profileId; // unlikerId
     private final UUID authorId;
-
-    public CommentLikedEvent(UUID commentId, UUID profileId) {
-        this(commentId, profileId, null);
-    }
 }

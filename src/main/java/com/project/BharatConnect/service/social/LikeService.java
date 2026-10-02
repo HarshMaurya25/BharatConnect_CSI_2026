@@ -10,7 +10,9 @@ import com.project.BharatConnect.error.exception.CommentNotFoundException;
 import com.project.BharatConnect.error.exception.ConflictException;
 import com.project.BharatConnect.error.exception.ContentNotFoundException;
 import com.project.BharatConnect.event.CommentLikedEvent;
+import com.project.BharatConnect.event.CommentUnlikedEvent;
 import com.project.BharatConnect.event.ContentLikedEvent;
+import com.project.BharatConnect.event.ContentUnlikedEvent;
 import com.project.BharatConnect.repo.CommentLikeRepository;
 import com.project.BharatConnect.repo.CommentRepository;
 import com.project.BharatConnect.repo.ContentLikeRepository;
@@ -65,7 +67,8 @@ public class LikeService {
                         .build();
                 contentLikeRepository.saveAndFlush(like);
                 contentCounterRepository.incrementContentLikeCount(contentId);
-                eventPublisher.publishEvent(new ContentLikedEvent(contentId, profileId));
+                UUID ownerId = content.getProfile() != null ? content.getProfile().getUserId() : null;
+                eventPublisher.publishEvent(new ContentLikedEvent(contentId, profileId, ownerId));
             } catch (DataIntegrityViolationException e) {
                 log.debug("Concurrent duplicate like for content {} by user {}", contentId, profileId);
             }
@@ -88,6 +91,8 @@ public class LikeService {
         int deletedCount = contentLikeRepository.deleteByContentIdAndProfileUserId(contentId, profileId);
         if (deletedCount > 0) {
             contentCounterRepository.decrementContentLikeCount(contentId);
+            UUID ownerId = content.getProfile() != null ? content.getProfile().getUserId() : null;
+            eventPublisher.publishEvent(new ContentUnlikedEvent(contentId, profileId, ownerId));
         }
 
         long currentLikeCount = contentRepository.findById(contentId)
@@ -129,7 +134,8 @@ public class LikeService {
                         .build();
                 commentLikeRepository.saveAndFlush(like);
                 contentCounterRepository.incrementCommentLikeCount(commentId);
-                eventPublisher.publishEvent(new CommentLikedEvent(commentId, profileId));
+                UUID authorId = comment.getProfile() != null ? comment.getProfile().getUserId() : null;
+                eventPublisher.publishEvent(new CommentLikedEvent(commentId, profileId, authorId));
             } catch (DataIntegrityViolationException e) {
                 log.debug("Concurrent duplicate like for comment {} by user {}", commentId, profileId);
             }
@@ -146,13 +152,14 @@ public class LikeService {
     public LikeResponseDto unlikeComment(UUID commentId) {
         UUID profileId = getCurrentProfileId();
 
-        if (!commentRepository.existsById(commentId)) {
-            throw new CommentNotFoundException("Comment not found");
-        }
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentNotFoundException("Comment not found"));
 
         int deletedCount = commentLikeRepository.deleteByCommentIdAndProfileUserId(commentId, profileId);
         if (deletedCount > 0) {
             contentCounterRepository.decrementCommentLikeCount(commentId);
+            UUID authorId = comment.getProfile() != null ? comment.getProfile().getUserId() : null;
+            eventPublisher.publishEvent(new CommentUnlikedEvent(commentId, profileId, authorId));
         }
 
         long currentLikeCount = commentRepository.findById(commentId)

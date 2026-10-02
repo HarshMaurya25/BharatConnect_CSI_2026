@@ -11,6 +11,9 @@ import com.project.BharatConnect.entity.Quiz;
 import com.project.BharatConnect.error.exception.ContentNotFoundException;
 import com.project.BharatConnect.error.exception.InvalidMediaException;
 import com.project.BharatConnect.error.exception.InvalidRequestException;
+import com.project.BharatConnect.event.ContentCreatedEvent;
+import com.project.BharatConnect.event.ContentDeletedEvent;
+import com.project.BharatConnect.event.ContentRepostedEvent;
 import com.project.BharatConnect.mapper.ContentMapper;
 import com.project.BharatConnect.repo.CommentLikeRepository;
 import com.project.BharatConnect.repo.CommentRepository;
@@ -20,6 +23,7 @@ import com.project.BharatConnect.repo.ProfileRepository;
 import com.project.BharatConnect.service.media.MediaService;
 import com.project.BharatConnect.service.user.UserDetail;
 import lombok.AllArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,6 +50,7 @@ public class ContentService {
     private final PollService pollService;
     private final QuizService quizService;
     private final ContentMapper contentMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public ContentResponseDto uploadContent(ContentCreateRequest req, MultipartFile file) {
@@ -116,10 +121,19 @@ public class ContentService {
             }
             case REPOST -> {
                 contentRepository.incrementRepostCount(resolvedParent.getId());
+                if (resolvedParent.getProfile() != null) {
+                    eventPublisher.publishEvent(new ContentRepostedEvent(
+                            resolvedParent.getId(),
+                            profile.getUserId(),
+                            resolvedParent.getProfile().getUserId()
+                    ));
+                }
             }
             case TEXT -> {
             }
         }
+
+        eventPublisher.publishEvent(new ContentCreatedEvent(content.getId(), profile.getUserId(), type));
 
         return contentMapper.toResponse(content, profile.getDisplayName(), profile.getUserName(), profile.getUserId(), false);
     }
@@ -258,6 +272,7 @@ public class ContentService {
         contentLikeRepository.deleteByContentId(contentId);
 
         contentRepository.delete(content);
+        eventPublisher.publishEvent(new ContentDeletedEvent(contentId, ownerId, content.getContentType()));
         return true;
     }
 

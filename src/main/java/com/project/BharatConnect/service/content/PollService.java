@@ -9,11 +9,13 @@ import com.project.BharatConnect.entity.PollVote;
 import com.project.BharatConnect.error.exception.ConflictException;
 import com.project.BharatConnect.error.exception.ContentNotFoundException;
 import com.project.BharatConnect.error.exception.InvalidRequestException;
+import com.project.BharatConnect.event.PollVotedEvent;
 import com.project.BharatConnect.repo.PollOptionRepository;
 import com.project.BharatConnect.repo.PollRepository;
 import com.project.BharatConnect.repo.PollVoteRepository;
 import com.project.BharatConnect.repo.ProfileRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,7 @@ public class PollService {
     private final PollVoteRepository pollVoteRepository;
     private final PollOptionRepository pollOptionRepository;
     private final ProfileRepository profileRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public Poll createPoll(Content content, ContentCreateRequest req) {
         Poll poll = Poll.builder()
@@ -92,6 +95,12 @@ public class PollService {
         }
 
         pollOptionRepository.incrementVoteCount(optionId);
+
+        UUID contentId = poll.getContent() != null ? poll.getContent().getId() : null;
+        UUID ownerId = (poll.getContent() != null && poll.getContent().getProfile() != null)
+                ? poll.getContent().getProfile().getUserId()
+                : null;
+        eventPublisher.publishEvent(new PollVotedEvent(contentId, profileId, ownerId));
 
         Poll updatedPoll = pollRepository.findByIdWithOptions(pollId).orElse(poll);
 

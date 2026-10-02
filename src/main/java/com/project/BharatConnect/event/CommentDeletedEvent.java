@@ -7,14 +7,10 @@ import java.util.UUID;
 
 @Getter
 @RequiredArgsConstructor
-public class CommentCreatedEvent {
+public class CommentDeletedEvent {
     private final UUID commentId;
     private final UUID contentId;
     private final UUID profileId; // author
     private final UUID contentOwnerId;
     private final UUID parentCommentId;
-
-    public CommentCreatedEvent(UUID commentId, UUID contentId, UUID profileId, UUID parentCommentId) {
-        this(commentId, contentId, profileId, null, parentCommentId);
-    }
 }

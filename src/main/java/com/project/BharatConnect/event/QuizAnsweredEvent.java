@@ -7,12 +7,9 @@ import java.util.UUID;
 
 @Getter
 @RequiredArgsConstructor
-public class ContentLikedEvent {
+public class QuizAnsweredEvent {
     private final UUID contentId;
-    private final UUID profileId; // likerId
+    private final UUID profileId; // userId/answerer
     private final UUID ownerId;
-
-    public ContentLikedEvent(UUID contentId, UUID profileId) {
-        this(contentId, profileId, null);
-    }
+    private final boolean correct;
 }
