@@ -58,7 +58,9 @@ public class SecurityConfig {
                                         "/v3/api-docs/**",
                                         "/test-upload.html",
                                         "/static/**",
-                                        "/*.html"
+                                        "/*.html",
+                                        "/api/chatbot/summaries",
+                                        "/api/chatbot/rewrite"
                                 ).permitAll()
                                 .requestMatchers("/connect/**").permitAll()
                                 .anyRequest().authenticated())
