@@ -2,6 +2,7 @@ package com.project.BharatConnect.service.profile;
 
 import com.project.BharatConnect.dto.profile.ProfileCreateRequestDto;
 import com.project.BharatConnect.dto.profile.ProfileResponseDto;
+import com.project.BharatConnect.dto.social.FollowUserResponseDto;
 import com.project.BharatConnect.entity.Profile;
 import com.project.BharatConnect.entity.User;
 import com.project.BharatConnect.error.exception.InvalidRequestException;
@@ -15,6 +16,8 @@ import com.project.BharatConnect.service.user.UserDetail;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -144,6 +147,22 @@ public class ProfileService {
                 );
 
         return profileMapper.toResponse(profile);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<FollowUserResponseDto> searchProfiles(
+            String query,
+            int page,
+            int size
+    ) {
+        if (query == null || query.isBlank()) {
+            throw new InvalidRequestException("Search query cannot be empty");
+        }
+
+        return profileRepository.searchProfiles(
+                query.trim(),
+                PageRequest.of(page, size)
+        );
     }
 
 

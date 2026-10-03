@@ -14,9 +14,23 @@ public interface PollRepository extends JpaRepository<Poll, UUID> {
 
     Optional<Poll> findByContentId(UUID contentId);
 
-    @Query("SELECT p FROM Poll p LEFT JOIN FETCH p.options WHERE p.id = :id")
+    @Query("""
+        SELECT DISTINCT p
+        FROM Poll p
+        LEFT JOIN FETCH p.options
+        LEFT JOIN FETCH p.content c
+        LEFT JOIN FETCH c.profile
+        WHERE p.id = :id
+        """)
     Optional<Poll> findByIdWithOptions(@Param("id") UUID id);
 
-    @Query("SELECT p FROM Poll p LEFT JOIN FETCH p.options WHERE p.content.id = :contentId")
+    @Query("""
+        SELECT DISTINCT p
+        FROM Poll p
+        LEFT JOIN FETCH p.options
+        LEFT JOIN FETCH p.content c
+        LEFT JOIN FETCH c.profile
+        WHERE c.id = :contentId
+        """)
     Optional<Poll> findByContentIdWithOptions(@Param("contentId") UUID contentId);
 }

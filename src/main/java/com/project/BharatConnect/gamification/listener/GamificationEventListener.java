@@ -9,6 +9,8 @@ import com.project.BharatConnect.gamification.service.AchievementEvaluator;
 import com.project.BharatConnect.gamification.service.PointsService;
 import com.project.BharatConnect.gamification.service.QuestService;
 import com.project.BharatConnect.gamification.service.StreakService;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -33,6 +35,7 @@ public class GamificationEventListener {
 
     @Async("gamificationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleContentCreated(ContentCreatedEvent event) {
         try {
             UUID profileId = event.getProfileId();
@@ -91,6 +94,7 @@ public class GamificationEventListener {
 
     @Async("gamificationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleContentDeleted(ContentDeletedEvent event) {
         try {
             UUID profileId = event.getProfileId();
@@ -105,6 +109,7 @@ public class GamificationEventListener {
 
     @Async("gamificationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleContentLiked(ContentLikedEvent event) {
         try {
             UUID likerId = event.getProfileId();
@@ -134,6 +139,7 @@ public class GamificationEventListener {
 
     @Async("gamificationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleContentUnliked(ContentUnlikedEvent event) {
         try {
             UUID unlikerId = event.getProfileId();
@@ -153,6 +159,7 @@ public class GamificationEventListener {
 
     @Async("gamificationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleCommentCreated(CommentCreatedEvent event) {
         try {
             UUID authorId = event.getProfileId();
@@ -187,6 +194,7 @@ public class GamificationEventListener {
 
     @Async("gamificationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleCommentDeleted(CommentDeletedEvent event) {
         try {
             UUID authorId = event.getProfileId();
@@ -201,6 +209,7 @@ public class GamificationEventListener {
 
     @Async("gamificationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleCommentLiked(CommentLikedEvent event) {
         try {
             UUID likerId = event.getProfileId();
@@ -223,6 +232,7 @@ public class GamificationEventListener {
 
     @Async("gamificationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleCommentUnliked(CommentUnlikedEvent event) {
         try {
             UUID unlikerId = event.getProfileId();
@@ -242,6 +252,7 @@ public class GamificationEventListener {
 
     @Async("gamificationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handlePollVoted(PollVotedEvent event) {
         try {
             UUID voterId = event.getProfileId();
@@ -260,6 +271,7 @@ public class GamificationEventListener {
 
     @Async("gamificationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleQuizAnswered(QuizAnsweredEvent event) {
         try {
             UUID userId = event.getProfileId();
@@ -282,6 +294,7 @@ public class GamificationEventListener {
 
     @Async("gamificationTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleContentReposted(ContentRepostedEvent event) {
         try {
             UUID reposterId = event.getReposterId();

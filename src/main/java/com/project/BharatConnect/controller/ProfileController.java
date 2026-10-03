@@ -2,9 +2,11 @@ package com.project.BharatConnect.controller;
 
 import com.project.BharatConnect.dto.profile.ProfileCreateRequestDto;
 import com.project.BharatConnect.dto.profile.ProfileResponseDto;
+import com.project.BharatConnect.dto.social.FollowUserResponseDto;
 import com.project.BharatConnect.service.profile.ProfileService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -61,6 +63,17 @@ public class ProfileController {
     ) {
         return ResponseEntity.ok(
                 profileService.getProfileByUsername(username)
+        );
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<FollowUserResponseDto>> searchProfiles(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(
+                profileService.searchProfiles(query, page, size)
         );
     }
 

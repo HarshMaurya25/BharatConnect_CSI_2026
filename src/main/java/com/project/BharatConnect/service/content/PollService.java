@@ -36,14 +36,21 @@ public class PollService {
     private final ApplicationEventPublisher eventPublisher;
 
     public Poll createPoll(Content content, ContentCreateRequest req) {
+
         Poll poll = Poll.builder()
                 .content(content)
-                .expiresAt(req.getPollDurationHours() == null ? null
-                        : LocalDateTime.now().plusHours(req.getPollDurationHours()))
+                .expiresAt(
+                        req.getPollDurationHours() == null
+                                ? null
+                                : LocalDateTime.now()
+                                .plusHours(req.getPollDurationHours())
+                )
                 .build();
 
         int i = 0;
+
         for (String text : req.getPollOptions()) {
+
             poll.getOptions().add(
                     PollOption.builder()
                             .poll(poll)
@@ -58,62 +65,131 @@ public class PollService {
     }
 
     @Transactional
-    public ContentResponseDto.PollDto voteByContentId(UUID contentId, UUID optionId, UUID profileId) {
+    public ContentResponseDto.PollDto voteByContentId(
+            UUID contentId,
+            UUID optionId,
+            UUID profileId) {
+
         Poll poll = pollRepository.findByContentIdWithOptions(contentId)
-                .orElseThrow(() -> new ContentNotFoundException("Poll not found for content " + contentId));
+                .orElseThrow(() ->
+                        new ContentNotFoundException(
+                                "Poll not found for content " + contentId
+                        )
+                );
+
         return vote(poll.getId(), optionId, profileId);
     }
 
     @Transactional
-    public ContentResponseDto.PollDto vote(UUID pollId, UUID optionId, UUID profileId) {
-        Poll poll = pollRepository.findByIdWithOptions(pollId)
-                .orElseThrow(() -> new ContentNotFoundException("Poll not found"));
+    public ContentResponseDto.PollDto vote(
+            UUID pollId,
+            UUID optionId,
+            UUID profileId) {
 
-        if (poll.getExpiresAt() != null && poll.getExpiresAt().isBefore(LocalDateTime.now())) {
+        Poll poll = pollRepository.findByIdWithOptions(pollId)
+                .orElseThrow(() ->
+                        new ContentNotFoundException("Poll not found")
+                );
+
+        // Check whether poll has expired
+        if (poll.getExpiresAt() != null
+                && poll.getExpiresAt().isBefore(LocalDateTime.now())) {
+
             throw new ConflictException("Poll has ended");
         }
 
-        PollOption option = poll.getOptions().stream()
+        // Check whether selected option belongs to this poll
+        PollOption option = poll.getOptions()
+                .stream()
                 .filter(o -> o.getId().equals(optionId))
                 .findFirst()
-                .orElseThrow(() -> new InvalidRequestException("Invalid option"));
+                .orElseThrow(() ->
+                        new InvalidRequestException("Invalid option")
+                );
 
-        if (pollVoteRepository.existsByPollIdAndProfileUserId(pollId, profileId)) {
+        // Prevent duplicate voting
+        if (pollVoteRepository
+                .existsByPollIdAndProfileUserId(pollId, profileId)) {
+
             throw new ConflictException("Already voted");
         }
 
         try {
+
             pollVoteRepository.saveAndFlush(
                     PollVote.builder()
                             .poll(poll)
                             .option(option)
-                            .profile(profileRepository.getReferenceById(profileId))
+                            .profile(
+                                    profileRepository
+                                            .getReferenceById(profileId)
+                            )
                             .build()
             );
+
         } catch (DataIntegrityViolationException e) {
+
+            // Handles race condition caused by concurrent voting
             throw new ConflictException("Already voted");
         }
 
+        // Increment selected option vote count
         pollOptionRepository.incrementVoteCount(optionId);
 
-        UUID contentId = poll.getContent() != null ? poll.getContent().getId() : null;
-        UUID ownerId = (poll.getContent() != null && poll.getContent().getProfile() != null)
+        // Get content ID
+        UUID contentId = poll.getContent() != null
+                ? poll.getContent().getId()
+                : null;
+
+        // Get content owner's user ID
+        UUID ownerId = (
+                poll.getContent() != null
+                        && poll.getContent().getProfile() != null
+        )
                 ? poll.getContent().getProfile().getUserId()
                 : null;
-        eventPublisher.publishEvent(new PollVotedEvent(contentId, profileId, ownerId));
 
-        Poll updatedPoll = pollRepository.findByIdWithOptions(pollId).orElse(poll);
+        // Publish gamification event
+        eventPublisher.publishEvent(
+                new PollVotedEvent(
+                        contentId,
+                        profileId,
+                        ownerId
+                )
+        );
 
+        // Fetch updated poll
+        Poll updatedPoll = pollRepository
+                .findByIdWithOptions(pollId)
+                .orElse(poll);
+
+        // Calculate total votes
         long totalVotes = updatedPoll.getOptions() != null
-                ? updatedPoll.getOptions().stream().mapToLong(PollOption::getVoteCount).sum()
+                ? updatedPoll.getOptions()
+                .stream()
+                .mapToLong(PollOption::getVoteCount)
+                .sum()
                 : 0L;
-        boolean expired = updatedPoll.getExpiresAt() != null && updatedPoll.getExpiresAt().isBefore(LocalDateTime.now());
 
-        List<ContentResponseDto.PollOptionDto> optionDtos = updatedPoll.getOptions() != null
-                ? updatedPoll.getOptions().stream()
-                .map(o -> new ContentResponseDto.PollOptionDto(o.getId(), o.getOptionText(), o.getVoteCount()))
-                .toList()
-                : Collections.emptyList();
+        // Check whether poll has expired
+        boolean expired = updatedPoll.getExpiresAt() != null
+                && updatedPoll.getExpiresAt()
+                .isBefore(LocalDateTime.now());
+
+        // Convert options to DTOs
+        List<ContentResponseDto.PollOptionDto> optionDtos =
+                updatedPoll.getOptions() != null
+                        ? updatedPoll.getOptions()
+                        .stream()
+                        .map(o ->
+                                new ContentResponseDto.PollOptionDto(
+                                        o.getId(),
+                                        o.getOptionText(),
+                                        o.getVoteCount()
+                                )
+                        )
+                        .toList()
+                        : Collections.emptyList();
 
         return new ContentResponseDto.PollDto(
                 updatedPoll.getId(),
