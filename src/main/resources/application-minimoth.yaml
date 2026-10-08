@@ -1,0 +1,2 @@
+minimoth:
+  api-key: ${MINIMOTH_API_KEY}

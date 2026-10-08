@@ -3,6 +3,7 @@ package com.project.BharatConnect.error.handler;
 import com.project.BharatConnect.dto.exception.ApiError;
 import com.project.BharatConnect.error.ErrorBuilder;
 import com.project.BharatConnect.error.exception.*;
+import com.project.BharatConnect.service.minimoth.MiniMothException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -154,6 +155,26 @@ public class GlobalExceptionHandler {
                 "Resource was modified concurrently. Please try again.",
                 "CONCURRENT_MODIFICATION",
                 HttpStatus.CONFLICT
+        );
+    }
+
+    @ExceptionHandler(MiniMothException.class)
+    public ResponseEntity<List<ApiError>> handleMiniMothException(
+            MiniMothException exception
+    ) {
+        String message = exception.getMessage();
+        // Verification failures (wrong/expired OTP) vs infrastructure errors
+        boolean isVerificationFailure = message != null &&
+                (message.contains("401") || message.contains("400") || message.contains("verification failed"));
+        HttpStatus status = isVerificationFailure ? HttpStatus.BAD_REQUEST : HttpStatus.BAD_GATEWAY;
+        String key = isVerificationFailure ? "PHONE_OTP_INVALID" : "PHONE_OTP_SERVICE_ERROR";
+
+        return errorBuilder.buildError(
+                isVerificationFailure
+                        ? "Phone OTP is invalid or has expired. Please request a new one."
+                        : "Could not reach the OTP delivery service. Please try again later.",
+                key,
+                status
         );
     }
 }

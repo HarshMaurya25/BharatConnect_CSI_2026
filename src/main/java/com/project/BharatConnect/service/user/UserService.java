@@ -9,9 +9,9 @@ import com.project.BharatConnect.error.exception.InvalidCredentialsException;
 import com.project.BharatConnect.error.exception.OtpExpireException;
 import com.project.BharatConnect.error.exception.UserAlreadyExistException;
 import com.project.BharatConnect.repo.UserRepository;
+import com.project.BharatConnect.service.minimoth.PhoneOtpService;
 import com.project.BharatConnect.service.security.JwtService;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.Null;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -27,19 +27,36 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final OtpService otpService;
+    private final PhoneOtpService phoneOtpService;
 
+    /** Sends an email OTP to the given address. */
     public String sendOtp(String email) {
         return otpService.generateOtp(email);
+    }
+
+    /**
+     * Sends a WhatsApp/SMS OTP to the given phone number via MiniMoth.
+     *
+     * @param phone Indian mobile number (+91XXXXXXXXXX or 10 bare digits)
+     * @return the otp_id returned by MiniMoth
+     */
+    public String sendPhoneOtp(String phone) {
+        return phoneOtpService.sendOtp(phone);
     }
 
     @Transactional
     public LoginResponseDto createUser(UserCreateRequestDto requestDto) {
 
         String email = requestDto.getEmail();
+        String phone = requestDto.getPhone();
 
+        // 1. Verify email OTP (existing flow)
         if (!otpService.verifyOtp(email, requestDto.getOtp())) {
             throw new OtpExpireException(email);
         }
+
+        // 2. Verify phone OTP via MiniMoth (WhatsApp/SMS)
+        phoneOtpService.verifyOtp(phone, requestDto.getPhoneOtp());
 
         if (userRepository.existsByEmail(email)) {
             throw new UserAlreadyExistException(email);
@@ -47,6 +64,7 @@ public class UserService {
 
         User user = User.builder()
                 .email(email)
+                .phone(phone)
                 .password(passwordEncoder.encode(requestDto.getPassword()))
                 .role(requestDto.getRole())
                 .build();
